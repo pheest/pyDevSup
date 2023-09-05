@@ -32,7 +32,6 @@
 #include "pydevsup.h"
 #ifdef _WIN32
 #define PATH_MAX _MAX_PATH
-#include <direct.h>
 #endif
 
 static void cleanupPy(void *junk)
