@@ -9,9 +9,6 @@ include $(TOP)/configure/CONFIG_PY
 INSTALL_SHRLIB = $(PY_INSTALL_DIR)/devsup
 
 LOADABLE_LIBRARY_HOST += _dbapi
-ifeq ($(OS),Windows_NT)
-    SHRLIB_SUFFIX_BASE = .pyd
-endif
 
 TARGETS += $(COMMON_DIR)/pyDevSupCommon.dbd
 DBDDEPENDS_FILES += pyDevSupCommon.dbd$(DEP)
@@ -32,7 +29,7 @@ _dbapi_SRCS += utest.c
 _dbapi_SRCS += pyDevSupCommon_registerRecordDeviceDriver.cpp
 
 _dbapi_LIBS += $(EPICS_BASE_IOC_LIBS)
-_dbapi_SYS_LIBS_WIN32 += python$(PY_LD_VER)
+_dbapi_LDFLAGS_WIN32 += $(PY_LDLIBS)
 _dbapi_SYS_LIBS_WIN32 += ws2_32 Advapi32 Dbghelp
 
 PY += devsup/__init__.py
@@ -69,7 +66,11 @@ pyconfig:
 
 ifneq (,$(T_A))
 nose:
+ifeq ($(OS),Windows_NT)
+	@set PYTHONPATH=$(abspath $(TOP))/python$(PY_LD_VER)/$(EPICS_HOST_ARCH) && set XEPICS_BASE=$(EPICS_BASE) && $(PYTHON) -m nose2 -v devsup $(NOSEFLAGS)
+else
 	PYTHONPATH="${PYTHONPATH}:$(abspath $(TOP))/python$(PY_LD_VER)/$(EPICS_HOST_ARCH)" $(PYTHON) -m nose2 -v devsup $(NOSEFLAGS)
+endif
 
 # bounce back down to the sphinx generated Makefile
 # aren't Makefiles fun...

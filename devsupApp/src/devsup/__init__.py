@@ -1,6 +1,16 @@
 import os
+import sys
 import atexit
 import tempfile
+
+if sys.platform == 'win32':
+    # See https://stackoverflow.com/questions/72858093/how-to-specify-pyd-dll-dependencies-search-paths-at-runtime-with-python
+    # This is required for use of e.g. nose testing, but
+    # not when running as an IOC, since the IOC will already have loaded EPICS base DLLs.
+    xepics_base = os.getenv('XEPICS_BASE')
+    epics_host_arch = os.getenv('EPICS_HOST_ARCH')
+    if xepics_base is not None and epics_host_arch is not None:
+        os.add_dll_directory(xepics_base.strip() + "/bin/" + epics_host_arch)
 
 from . import _dbapi
 
@@ -56,12 +66,11 @@ def _init(iocMain=False):
     dirname = os.path.dirname(__file__)
     dbd_name = dirname + "/_dbapi.dbd"
     _dbapi.dbReadDatabase(dbd_name)
-    # e.g. 3.15.0.2 -> 30000 + 1500 + 0 + 2 = 31502
-    epics_version_int = EPICS_VERSION * 10000 + EPICS_REVISION * 100 + EPICS_MODIFICATION * 10 + EPICS_PATCH_LEVEL
-    if epics_version_int >= 31502:
+    epics_version_int = (EPICS_VERSION, EPICS_REVISION, EPICS_MODIFICATION, EPICS_PATCH_LEVEL)
+    if epics_version_int >= (3, 15, 0, 2):
         dbd_name = dirname + "/_lsilso.dbd"
         _dbapi.dbReadDatabase(dbd_name)
-    if epics_version_int >= 31610:
+    if epics_version_int >= (3, 16, 1, 0):
         dbd_name = dirname + "/_int64.dbd"
         _dbapi.dbReadDatabase(dbd_name)
     _dbapi._dbd_setup()
