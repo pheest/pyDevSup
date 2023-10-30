@@ -7,10 +7,12 @@ if sys.platform == 'win32':
     # See https://stackoverflow.com/questions/72858093/how-to-specify-pyd-dll-dependencies-search-paths-at-runtime-with-python
     # This is required for use of e.g. nose testing, but
     # not when running as an IOC, since the IOC will already have loaded EPICS base DLLs.
-    xepics_base = os.getenv('XEPICS_BASE')
+    epics_base = os.getenv('EPICS_BASE')
     epics_host_arch = os.getenv('EPICS_HOST_ARCH')
-    if xepics_base is not None and epics_host_arch is not None:
-        os.add_dll_directory(xepics_base.strip() + "/bin/" + epics_host_arch)
+    if epics_base is not None and epics_host_arch is not None:
+        epics_base = epics_base.replace("/",'\\')
+        dll_path = epics_base + "\\bin\\" + epics_host_arch
+        os.add_dll_directory(dll_path)
 
 from . import _dbapi
 
