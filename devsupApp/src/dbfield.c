@@ -3,8 +3,15 @@
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
 
+#ifdef _DEBUG
+#undef _DEBUG
 #include <Python.h>
 #ifdef HAVE_NUMPY
+#include <numpy/ndarrayobject.h>
+#endif
+#define _DEBUG
+#else
+#include <Python.h>
 #include <numpy/ndarrayobject.h>
 #endif
 
@@ -98,7 +105,12 @@ static PyObject* build_array(PyObject* obj, void *data, unsigned short ftype, un
 
     desc = dbf2np[ftype];
     if(ftype==DBF_STRING) {
-        desc->elsize = MAX_STRING_SIZE;
+#if NPY_ABI_VERSION >= 0x02000000
+    # See https://github.com/pytorch/pytorch/issues/121798
+    PyDataType_SET_ELSIZE(desc, MAX_STRING_SIZE);
+#else
+    desc->elsize = MAX_STRING_SIZE;
+#endif
     }
 
     Py_XINCREF(desc);
