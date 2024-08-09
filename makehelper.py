@@ -14,6 +14,7 @@ PY_LIBDIRS := /path ...
 from __future__ import print_function
 
 import sys
+import errno
 import os
 
 if len(sys.argv)<2:
@@ -27,7 +28,7 @@ else:
 
 from sysconfig import get_config_var
 try:
-    from distutils.sysconfig import get_python_inc
+    from sysconfig import get_python_inc
 except ImportError:
     def get_python_inc():
         return get_config_var('INCLUDEPY') or ''
