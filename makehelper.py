@@ -28,7 +28,8 @@ else:
 
 from sysconfig import get_config_var
 try:
-    from sysconfig import get_python_inc
+    # NB, sysconfig.get_python_inc doesn't exist, but distutils.sysconfig.get_python_inc does for Python <= 3.11
+    from distutils.sysconfig import get_python_inc
 except ImportError:
     def get_python_inc():
         return get_config_var('INCLUDEPY') or ''
