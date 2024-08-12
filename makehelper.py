@@ -29,11 +29,7 @@ else:
 from sysconfig import get_config_var, get_path, get_python_version
 
 incdirs = [get_path("include")]
-libdirs = [
-    # distutils.sysconfig.get_python_lib does not appear to work correctly on Ubuntu with Python versions < 3.10
-    get_config_var('LIBDIR') or get_config_var('LIBDEST') or '',
-    get_config_var('BINDIR') or '',
-]
+libdir = get_config_var('LIBDIR') or get_config_var('LIBDEST') or ''
 
 have_np='NO'
 try:
@@ -55,11 +51,9 @@ if ldver is None:
         ldver = ldver+'_d'
 print('PY_LD_VER :=',ldver, file=out)
 print('PY_INCDIRS :=',' '.join(incdirs), file=out)
-print('PY_LIBDIRS :=',' '.join(libdirs), file=out)
+print('PY_LIBDIRS :=',libdir, file=out)
 if sys.platform == 'win32':
     print('PY_LDLIBS :=', '/LIBPATH:' + os.path.join(sys.prefix, 'libs'), file=out)
-else:
-    print('PY_LDLIBS :=', get_config_var('BLDLIBRARY') or '', file=out)
 print('HAVE_NUMPY :=',have_np, file=out)
 
 try:
