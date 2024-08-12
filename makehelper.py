@@ -43,7 +43,7 @@ except ImportError:
 print('TARGET_CFLAGS +=',get_config_var('BASECFLAGS') or '', file=out)
 print('TARGET_CXXFLAGS +=',get_config_var('BASECFLAGS') or '', file=out)
 
-print('PY_VER :=',get_config_var('VERSION'), file=out)
+print('PY_VER :=',get_python_version(), file=out)
 ldver = get_config_var('LDVERSION')
 if ldver is None:
     ldver = get_config_var('VERSION')
