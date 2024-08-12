@@ -43,13 +43,6 @@ jobs:
           #  profile: deb8
           #  test: yes
 
-          - os: darwin
-            cmp: gcc
-            configuration: default
-            base: "7.0"
-            python: "3.6"
-            test: yes
-
           - os: ubuntu-latest
             cmp: gcc
             configuration: default
