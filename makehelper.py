@@ -29,7 +29,11 @@ else:
 from sysconfig import get_config_var, get_path, get_python_version
 
 incdirs = [get_path("include")]
-libdir = get_config_var('LIBDIR') or ''
+libdirs = [
+    # distutils.sysconfig.get_python_lib does not appear to work correctly on Ubuntu with Python versions < 3.10
+    get_config_var('LIBDIR') or get_config_var('LIBDEST') or '',
+    get_config_var('BINDIR') or '',
+]
 
 have_np='NO'
 try:
@@ -40,18 +44,22 @@ try:
 except ImportError:
     pass
 
-print('TARGET_CFLAGS +=',get_config_var('BASECFLAGS'), file=out)
-print('TARGET_CXXFLAGS +=',get_config_var('BASECFLAGS'), file=out)
+print('TARGET_CFLAGS +=',get_config_var('BASECFLAGS') or '', file=out)
+print('TARGET_CXXFLAGS +=',get_config_var('BASECFLAGS') or '', file=out)
 
-print('PY_VER :=',get_python_version(), file=out)
+print('PY_VER :=',get_config_var('VERSION'), file=out)
 ldver = get_config_var('LDVERSION')
 if ldver is None:
-    ldver = get_python_version()
+    ldver = get_config_var('VERSION')
     if get_config_var('Py_DEBUG'):
         ldver = ldver+'_d'
 print('PY_LD_VER :=',ldver, file=out)
 print('PY_INCDIRS :=',' '.join(incdirs), file=out)
-print('PY_LIBDIRS :=',libdir, file=out)
+print('PY_LIBDIRS :=',' '.join(libdirs), file=out)
+if sys.platform == 'win32':
+    print('PY_LDLIBS :=', '/LIBPATH:' + os.path.join(sys.prefix, 'libs'), file=out)
+else:
+    print('PY_LDLIBS :=', get_config_var('BLDLIBRARY') or '', file=out)
 print('HAVE_NUMPY :=',have_np, file=out)
 
 try:
