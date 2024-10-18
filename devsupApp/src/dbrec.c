@@ -2,7 +2,8 @@
 /* python has its own ideas about which version to support */
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
-
+/* See https://stackoverflow.com/questions/70705404/systemerror-py-ssize-t-clean-macro-must-be-defined-for-formats */
+#define PY_SSIZE_T_CLEAN
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -130,20 +131,27 @@ static PyObject* pyRecord_setSevr(pyRecord *self, PyObject *args, PyObject *kws)
 {
     dbCommon *prec = self->entry.precnode->precord;
 
-    static char* names[] = {"sevr", "stat", NULL};
+    static char* names[] = {"sevr", "stat", "amsg", NULL};
     short sevr = INVALID_ALARM, stat=COMM_ALARM;
+    char* amsg = "";
+    Py_ssize_t lMsg;
 
-    if(!PyArg_ParseTupleAndKeywords(args, kws, "|hh", names, &sevr, &stat))
+    /* see https://colinpaice.blog/2022/06/28/using-pyarg_parsetupleandkeywords-to-parse-data-in-python-external-functions/ */
+    if(!PyArg_ParseTupleAndKeywords(args, kws, "|hhs#", names, &sevr, &stat, &amsg, &lMsg))
         return NULL;
 
     if(sevr<firstEpicsAlarmSev || sevr>lastEpicsAlarmSev
        || stat<firstEpicsAlarmCond || stat>lastEpicsAlarmCond)
     {
-        PyErr_Format(PyExc_ValueError, "%s: Can't set alarms %d %d", prec->name, sevr, stat);
+        PyErr_Format(PyExc_ValueError, "%s: Can't set alarms %d %d %s", prec->name, sevr, stat, amsg);
         return NULL;
     }
 
+#if EPICS_VERSION_INT<VERSION_INT(7,0,6,1)
     recGblSetSevr(prec, stat, sevr);
+#else
+    recGblSetSevrMsg(prec, stat, sevr, amsg);
+#endif
     Py_RETURN_NONE;
 }
 
@@ -322,7 +330,7 @@ static PyMethodDef pyRecord_methods[] = {
      "infos() -> {'name':'value'}\n"
      "Return a dictionary of all infos for this record."},
     {"setSevr", (PyCFunction)pyRecord_setSevr, METH_VARARGS|METH_KEYWORDS,
-     "setSevr(sevr=INVALID_ALARM, stat=COMM_ALARM)\n"
+     "setSevr(sevr=INVALID_ALARM, stat=COMM_ALARM, amsg="")\n"
      "Set alarm new alarm severity/status.  Record must be locked!"},
     {"setTime", (PyCFunction)pyRecord_setTime, METH_VARARGS,
      "Set record timestamp if TSE==-2.  Record must be locked!"},
