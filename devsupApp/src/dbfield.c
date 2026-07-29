@@ -3,7 +3,6 @@
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
 
-#include <Python.h>
 #ifdef HAVE_NUMPY
 #include <numpy/ndarrayobject.h>
 #endif
@@ -118,21 +117,21 @@ static int assign_array(DBADDR *paddr, PyObject *arr)
 #ifdef HAVE_NUMPY
     void *rawfield = paddr->pfield;
     rset *prset;
-    PyObject *aval;
-    PyArrayObject *array = (PyArrayObject *)arr;
+    PyArrayObject *aval;
+    PyArrayObject * array = (PyArrayObject *)arr;
     unsigned elemsize = dbValueSize(paddr->field_type);
     unsigned long maxlen = paddr->no_elements, insize;
     PyArray_Descr *desc = dbf2np[paddr->field_type];
 
     if(paddr->field_type==DBF_STRING &&
-        (PyArray_NDIM(array) != 2 ||
-         PyArray_DIM(array, 0) > (npy_intp) maxlen ||
+        (PyArray_NDIM(array) != 2 || 
+         PyArray_DIM(array, 0) > (npy_intp) maxlen || 
          PyArray_DIM(array, 1) != MAX_STRING_SIZE))
     {
         PyErr_Format(PyExc_ValueError, "String array has incorrect shape or is too large");
         return 1;
 
-    } else if(PyArray_NDIM(array) != 1 || PyArray_DIM(array, 0) > (npy_intp) maxlen) {
+    } else if(PyArray_NDIM(array)!=1 || PyArray_DIM(array,0)>maxlen) {
         PyErr_Format(PyExc_ValueError, "Array has incorrect shape or is too large");
         return 1;
     }
@@ -162,14 +161,13 @@ static int assign_array(DBADDR *paddr, PyObject *arr)
     if(!(aval = PyArray_FromAny(arr, desc, 1, 2, NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED | NPY_ARRAY_WRITEABLE, arr)))
         return 1;
 
-    if(elemsize!=PyArray_ITEMSIZE((PyArrayObject *)aval)) {
+    if(elemsize!=PyArray_ITEMSIZE(aval)) {
         PyErr_Format(PyExc_AssertionError, "item size mismatch %u %u",
-                     elemsize, (unsigned)PyArray_ITEMSIZE((PyArrayObject *)aval));
-        Py_DECREF(aval);
+                    elemsize, (unsigned)PyArray_ITEMSIZE(aval) );
         return 1;
     }
 
-    memcpy(rawfield, PyArray_GETPTR1((PyArrayObject *)aval, 0), insize*elemsize);
+    memcpy(rawfield, PyArray_GETPTR1(aval, 0), insize*elemsize);
 
     Py_DECREF(aval);
 
@@ -304,8 +302,8 @@ static PyObject* pyField_putval(pyField *self, PyObject* args)
     OP(LONG,  epicsInt32,  PyInt_AsLong);
     OP(ULONG, epicsUInt32, PyInt_AsLong);
 #ifdef HAVE_INT64
-    OP(INT64,  epicsInt32,  PyLong_AsLongLong);
-    OP(UINT64, epicsUInt32, PyLong_AsLongLong);
+    OP(INT64,  epicsInt64,  PyLong_AsLongLong);
+    OP(UINT64, epicsUInt64, PyLong_AsLongLong);
 #endif
     OP(FLOAT, epicsFloat32,PyFloat_AsDouble);
     OP(DOUBLE,epicsFloat64,PyFloat_AsDouble);
@@ -322,11 +320,15 @@ static PyObject* pyField_putval(pyField *self, PyObject* args)
         fld = PyString_AsString(val);
 #endif
         if(fld) {
-          strncpy(dest, fld, MAX_STRING_SIZE);
-          dest[MAX_STRING_SIZE-1]='\0';
+          strncpy(dest, fld, self->addr.field_size);
+          dest[self->addr.field_size-1]='\0';
         } else {
           dest[0] = '\0';
         }
+        if (self->addr.special == SPC_MOD)
+            /* This is needed for long string support. */
+            if (prset = dbGetRset(&self->addr))
+                prset->special(&self->addr, 1);
 #if PY_MAJOR_VERSION >= 3
         Py_DECREF(data);
 #endif

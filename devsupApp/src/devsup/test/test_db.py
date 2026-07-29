@@ -2,6 +2,7 @@
 import os
 import unittest
 import tempfile
+import time
 
 import numpy
 from numpy.testing import assert_array_almost_equal, assert_array_equal
@@ -129,6 +130,87 @@ class TestField(IOCHelper):
             assert_array_equal(rec.VAL,
                                 numpy.asarray(["zero", "", "one", "This is a really long string which shoul", "", "last"], dtype='S40'))
 
+class TestLongStringField(IOCHelper):
+    db = """
+        record(lsi, "rec:lsi") {
+            field(SIZV,  128)
+            field(SCAN,  "I/O Intr")
+        }
+        record(lso, "rec:lso") {
+            field(SIZV,  128)
+            field(DOL,   "rec:lsi.VAL$")
+            field(OMSL,  "closed_loop")
+        }
+    """
+    if  _dbapi.epicsver[:4] < (3, 15, 0, 2):
+        # Long strings not impletemented yet.
+        db = None
+
+    def test_lsilso(self):
+        if  _dbapi.epicsver[:4] < (3, 15, 0, 2):
+            # Long strings not impletemented yet.
+            return
+ 
+        lsi = getRecord("rec:lsi")
+        lso = getRecord("rec:lso")
+
+        with lsi:
+            self.assertEqual(lsi.VAL, "")
+
+            lsi.VAL = "test"
+            self.assertEqual(lsi.VAL, "test")
+
+            lsi.VAL = ""
+            self.assertEqual(lsi.VAL, "")
+
+            # does not truncate
+            lsi.VAL = "This is a really long string which should NOT be truncated"
+            self.assertEqual(lsi.VAL, "This is a really long string which should NOT be truncated")
+        
+        lso.scan()
+        time.sleep(0.01) # The linked value needs a small amount of time to update.
+
+        with lso:
+            self.assertEqual(lso.VAL, lsi.VAL)
+            
+class TestInt64Field(IOCHelper):
+    db = """
+        record(int64in, "rec:in64") {
+            field(SCAN,  "I/O Intr")
+        }
+        record(int64out, "rec:out64") {
+            field(DOL,   "rec:in64.VAL")
+            field(OMSL,  "closed_loop")
+        }
+    """
+    if  _dbapi.epicsver[:4] < (3, 16, 1, 0):
+        # Long ints not impletemented yet.
+        db = None
+
+    def testint64(self):
+        if  _dbapi.epicsver[:4] < (3, 16, 1, 0):
+            # Long ints not impletemented yet.
+            return
+        in64 = getRecord("rec:in64")
+        out64 = getRecord("rec:out64")
+
+        with in64:
+            self.assertEqual(in64.VAL, 0)
+
+            in64.VAL = 42
+            self.assertEqual(in64.VAL, 42)
+
+            in64.VAL = 0x7FFFFFFFFFFFFFFE
+            self.assertEqual(in64.VAL, 0x7FFFFFFFFFFFFFFE)
+
+            in64.VAL = 0x7FFFFFFFFFFFFFFF
+            self.assertEqual(in64.VAL, 0x7FFFFFFFFFFFFFFF)
+        
+        out64.scan()
+        time.sleep(0.01) # The linked value needs a small amount of time to update.
+
+        with out64:
+            self.assertEqual(out64.VAL, in64.VAL)
 
 class TestDset(IOCHelper):
     db = """
@@ -163,3 +245,66 @@ class TestDset(IOCHelper):
         with rec:
             self.assertEqual(rec.VAL, 1)
             self.assertEqual(rec.UDF, 0)
+
+class TestAlarm(IOCHelper):
+    db = """
+    record(longin, "rec:inalarm:amsg") {
+        field(PINI, "YES")
+    }
+    record(longin, "rec:inalarm:plain") {
+        field(PINI, "YES")
+    }
+    record(longout, "rec:outalarm:amsg") {
+        field(PINI, "YES")
+        field(VAL,  "0")
+    }
+    record(longout, "rec:outalarm:plain") {
+        field(PINI, "YES")
+        field(VAL,  "0")
+    }
+    """
+    def test_setin_severity_message(self):
+        rec = getRecord("rec:inalarm:amsg")
+        with rec:
+            self.assertEqual(rec.SEVR, _dbapi.NO_ALARM)
+            self.assertEqual(rec.STAT, _dbapi.NO_ALARM)
+            if  _dbapi.epicsver[:4] >= (7, 0, 6, 0):
+                self.assertEqual(rec.AMSG, "")
+            self.assertEqual(rec.setSevr(_dbapi.MAJOR_ALARM, _dbapi.HIHI_ALARM, amsg="Meaningful input alarm message"), None)
+            self.assertEqual(rec.scan(sync=True), 0)
+            self.assertEqual(rec.STAT, _dbapi.HIHI_ALARM)
+            if  _dbapi.epicsver[:4] >= (7, 0, 6, 0):
+                self.assertEqual(rec.AMSG, "Meaningful input alarm message")
+                
+    def test_setin_severity_without_message(self):
+        rec = getRecord("rec:inalarm:plain")
+        with rec:
+            self.assertEqual(rec.SEVR, _dbapi.NO_ALARM)
+            self.assertEqual(rec.STAT, _dbapi.NO_ALARM)
+            self.assertEqual(rec.setSevr(_dbapi.MAJOR_ALARM, _dbapi.COMM_ALARM), None)
+            self.assertEqual(rec.scan(sync=True), 0)
+            self.assertEqual(rec.SEVR, _dbapi.MAJOR_ALARM)
+            self.assertEqual(rec.STAT, _dbapi.COMM_ALARM)
+
+    def test_setout_severity_message(self):
+        rec = getRecord("rec:outalarm:amsg")
+        with rec:
+            self.assertEqual(rec.SEVR, _dbapi.NO_ALARM)
+            self.assertEqual(rec.STAT, _dbapi.NO_ALARM)
+            if  _dbapi.epicsver[:4] >= (7, 0, 6, 0):
+                self.assertEqual(rec.AMSG, "")
+            self.assertEqual(rec.setSevr(_dbapi.MAJOR_ALARM, _dbapi.HIHI_ALARM, amsg="Meaningful output alarm message"), None)
+            self.assertEqual(rec.scan(sync=True), 0)
+            self.assertEqual(rec.STAT, _dbapi.HIHI_ALARM)
+            if  _dbapi.epicsver[:4] >= (7, 0, 6, 0):
+                self.assertEqual(rec.AMSG, "Meaningful output alarm message")
+                
+    def test_setout_severity_without_message(self):
+        rec = getRecord("rec:outalarm:plain")
+        with rec:
+            self.assertEqual(rec.SEVR, _dbapi.NO_ALARM)
+            self.assertEqual(rec.STAT, _dbapi.NO_ALARM)
+            self.assertEqual(rec.setSevr(_dbapi.MAJOR_ALARM, _dbapi.COMM_ALARM), None)
+            self.assertEqual(rec.scan(sync=True), 0)
+            self.assertEqual(rec.SEVR, _dbapi.MAJOR_ALARM)
+            self.assertEqual(rec.STAT, _dbapi.COMM_ALARM)
