@@ -2,8 +2,6 @@
 /* python has its own ideas about which version to support */
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
-/* See https://stackoverflow.com/questions/70705404/systemerror-py-ssize-t-clean-macro-must-be-defined-for-formats */
-#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <epicsVersion.h>
 #include <dbCommon.h>
@@ -127,11 +125,9 @@ static PyObject* pyRecord_setSevr(pyRecord *self, PyObject *args, PyObject *kws)
 
     static char* names[] = {"sevr", "stat", "amsg", NULL};
     short sevr = INVALID_ALARM, stat=COMM_ALARM;
-    char* amsg = "";
-    Py_ssize_t lMsg;
+    char* amsg = NULL;
 
-    /* see https://colinpaice.blog/2022/06/28/using-pyarg_parsetupleandkeywords-to-parse-data-in-python-external-functions/ */
-    if(!PyArg_ParseTupleAndKeywords(args, kws, "|hhs#", names, &sevr, &stat, &amsg, &lMsg))
+    if(!PyArg_ParseTupleAndKeywords(args, kws, "|hhz", names, &sevr, &stat, &amsg))
         return NULL;
 
     if(sevr<firstEpicsAlarmSev || sevr>lastEpicsAlarmSev
@@ -324,7 +320,7 @@ static PyMethodDef pyRecord_methods[] = {
      "infos() -> {'name':'value'}\n"
      "Return a dictionary of all infos for this record."},
     {"setSevr", (PyCFunction)pyRecord_setSevr, METH_VARARGS|METH_KEYWORDS,
-     "setSevr(sevr=INVALID_ALARM, stat=COMM_ALARM, amsg="")\n"
+     "setSevr(sevr=INVALID_ALARM, stat=COMM_ALARM, amsg=None)\n"
      "Set alarm new alarm severity/status.  Record must be locked!"},
     {"setTime", (PyCFunction)pyRecord_setTime, METH_VARARGS,
      "Set record timestamp if TSE==-2.  Record must be locked!"},
