@@ -11,9 +11,9 @@ pydevsup documentation
 It currently supports EPICS >=3.14.12 and python versions >=3.6
 The numpy package is also required.
 
-The source can be found at http://github.com/mdavidsaver/pyDevSup
+The source can be found at https://github.com/epics-modules/pyDevSup
 
-File releases are available at https://github.com/mdavidsaver/pyDevSup/releases
+File releases are available at https://github.com/epics-modules/pyDevSup/releases
 
 Contents:
 
