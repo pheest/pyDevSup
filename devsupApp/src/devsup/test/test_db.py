@@ -130,6 +130,40 @@ class TestField(IOCHelper):
             assert_array_equal(rec.VAL,
                                 numpy.asarray(["zero", "", "one", "This is a really long string which shoul", "", "last"], dtype='S40'))
 
+class TestDset(IOCHelper):
+    db = """
+        record(longin, "rec:li") {
+            field(DTYP, "Python Device")
+            field(INP , "@devsup.test.test_db|TestDset foo bar")
+        }
+    """
+
+    class Increment(object):
+        def process(self, rec, reason):
+            rec.VAL += 1
+        def detach(self, rec):
+            pass
+
+    @classmethod
+    def build(klass, rec, args):
+        if rec.name()=='rec:li':
+            return klass.Increment()
+        else:
+            raise RuntimeError("Unsupported")
+
+    def test_increment(self):
+        rec = getRecord('rec:li')
+
+        with rec:
+            self.assertEqual(rec.VAL, 0)
+            self.assertEqual(rec.UDF, 1)
+
+        rec.scan(sync=True)
+
+        with rec:
+            self.assertEqual(rec.VAL, 1)
+            self.assertEqual(rec.UDF, 0)
+            
 class TestLongStringField(IOCHelper):
     db = """
         record(lsi, "rec:lsi") {
@@ -184,12 +218,12 @@ class TestInt64Field(IOCHelper):
         }
     """
     if  _dbapi.epicsver[:4] < (3, 16, 1, 0):
-        # Long ints not impletemented yet.
+        # Long ints not implemented yet.
         db = None
 
     def testint64(self):
         if  _dbapi.epicsver[:4] < (3, 16, 1, 0):
-            # Long ints not impletemented yet.
+            # Long ints not implemented yet.
             return
         in64 = getRecord("rec:in64")
         out64 = getRecord("rec:out64")
@@ -229,40 +263,6 @@ class TestCalcOutRecord(IOCHelper):
         self.assertEqual(rec.scan(sync=True), 0)
         self.assertEqual(rec.VAL, 42)
     
-class TestDset(IOCHelper):
-    db = """
-        record(longin, "rec:li") {
-            field(DTYP, "Python Device")
-            field(INP , "@devsup.test.test_db|TestDset foo bar")
-        }
-    """
-
-    class Increment(object):
-        def process(self, rec, reason):
-            rec.VAL += 1
-        def detach(self, rec):
-            pass
-
-    @classmethod
-    def build(klass, rec, args):
-        if rec.name()=='rec:li':
-            return klass.Increment()
-        else:
-            raise RuntimeError("Unsupported")
-
-    def test_increment(self):
-        rec = getRecord('rec:li')
-
-        with rec:
-            self.assertEqual(rec.VAL, 0)
-            self.assertEqual(rec.UDF, 1)
-
-        rec.scan(sync=True)
-
-        with rec:
-            self.assertEqual(rec.VAL, 1)
-            self.assertEqual(rec.UDF, 0)
-
 class TestAlarm(IOCHelper):
     db = """
     record(longin, "rec:inalarm:amsg") {

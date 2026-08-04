@@ -124,14 +124,14 @@ static int assign_array(DBADDR *paddr, PyObject *arr)
     PyArray_Descr *desc = dbf2np[paddr->field_type];
 
     if(paddr->field_type==DBF_STRING &&
-        (PyArray_NDIM(array) != 2 || 
-         PyArray_DIM(array, 0) > (npy_intp) maxlen || 
+        (PyArray_NDIM(array) != 2 ||
+         PyArray_DIM(array, 0) > (npy_intp) maxlen ||
          PyArray_DIM(array, 1) != MAX_STRING_SIZE))
     {
         PyErr_Format(PyExc_ValueError, "String array has incorrect shape or is too large");
         return 1;
 
-    } else if(PyArray_NDIM(array)!=1 || PyArray_DIM(array,0)>maxlen) {
+    } else if(PyArray_NDIM(array) != 1 || PyArray_DIM(array, 0) > (npy_intp) maxlen) {
         PyErr_Format(PyExc_ValueError, "Array has incorrect shape or is too large");
         return 1;
     }
