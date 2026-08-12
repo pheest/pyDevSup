@@ -2,7 +2,9 @@
 /* python has its own ideas about which version to support */
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
+
 #include <Python.h>
+
 #include <epicsVersion.h>
 #include <dbCommon.h>
 #include <dbAccess.h>
@@ -125,7 +127,7 @@ static PyObject* pyRecord_setSevr(pyRecord *self, PyObject *args, PyObject *kws)
 
     static char* names[] = {"sevr", "stat", "amsg", NULL};
     short sevr = INVALID_ALARM, stat=COMM_ALARM;
-    char* amsg = NULL;
+    const char *amsg = NULL;
 
     if(!PyArg_ParseTupleAndKeywords(args, kws, "|hhz", names, &sevr, &stat, &amsg))
         return NULL;
@@ -133,15 +135,17 @@ static PyObject* pyRecord_setSevr(pyRecord *self, PyObject *args, PyObject *kws)
     if(sevr<firstEpicsAlarmSev || sevr>lastEpicsAlarmSev
        || stat<firstEpicsAlarmCond || stat>lastEpicsAlarmCond)
     {
-        PyErr_Format(PyExc_ValueError, "%s: Can't set alarms %d %d %s", prec->name, sevr, stat, amsg);
+        PyErr_Format(PyExc_ValueError, "%s: Can't set alarms %d %d", prec->name, sevr, stat);
         return NULL;
     }
-
-#if EPICS_VERSION_INT<VERSION_INT(7,0,6,0)
-    recGblSetSevr(prec, stat, sevr);
-#else
-    recGblSetSevrMsg(prec, stat, sevr, amsg);
+// @since 7.0.6
+#ifdef HAS_ALARM_MESSAGE
+    if(amsg) {
+        recGblSetSevrMsg(prec, stat, sevr, "%s", amsg);
+        Py_RETURN_NONE;
+    }
 #endif
+    recGblSetSevr(prec, stat, sevr);
     Py_RETURN_NONE;
 }
 
@@ -321,7 +325,8 @@ static PyMethodDef pyRecord_methods[] = {
      "Return a dictionary of all infos for this record."},
     {"setSevr", (PyCFunction)pyRecord_setSevr, METH_VARARGS|METH_KEYWORDS,
      "setSevr(sevr=INVALID_ALARM, stat=COMM_ALARM, amsg=None)\n"
-     "Set alarm new alarm severity/status.  Record must be locked!"},
+     "Set alarm new alarm severity/status.  Record must be locked!\n"
+     "amsg requires EPICS Base >= 7.0.6."},
     {"setTime", (PyCFunction)pyRecord_setTime, METH_VARARGS,
      "Set record timestamp if TSE==-2.  Record must be locked!"},
     {"scan", (PyCFunction)pyRecord_scan, METH_VARARGS|METH_KEYWORDS,
