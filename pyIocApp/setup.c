@@ -134,8 +134,8 @@ static void cleanupPrep(initHookState state)
 static void pySetupReg(void)
 {
     Py_InitializeEx(0);
-#if NPY_TARGET_VERSION < NPY_1_9_API_VERSION
-    /* See https://docs.python.org/3/whatsnew/3.9.html */
+#if PY_VERSION_HEX < 0x03070000
+    /* See https://docs.python.org/3/c-api/threads.html#c.PyEval_InitThreads */
     PyEval_InitThreads();
 #endif
 

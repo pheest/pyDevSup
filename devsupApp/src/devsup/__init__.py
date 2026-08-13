@@ -22,7 +22,7 @@ if sys.platform == 'win32':
             cookie = kernel32.AddDllDirectory(dll_path)
             if not cookie:
                 error = ctypes.get_last_error()
-                raise OSError("Failed to add DLL directory: {error}")
+                raise OSError(f"Failed to add DLL directory: {error}")
 
 from . import _dbapi
 
