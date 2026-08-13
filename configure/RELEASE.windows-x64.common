@@ -25,7 +25,7 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 # Comment out if not present
 
 # IOC statistics (cpu and mem usage, ...)
-DEVIOCSTATS=C:\EPICS\support\iocStats
+#DEVIOCSTATS=C:\EPICS\support\iocStats
 
 # automatic save with restore on boot
 #AUTOSAVE=$(EPICS_BASE)
