@@ -166,6 +166,7 @@ static int assign_array(DBADDR *paddr, PyObject *arr)
     if(elemsize!=PyArray_ITEMSIZE(aval)) {
         PyErr_Format(PyExc_AssertionError, "item size mismatch %u %u",
                     elemsize, (unsigned)PyArray_ITEMSIZE(aval) );
+        Py_DECREF(aval);
         return 1;
     }
 
