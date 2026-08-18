@@ -1,14 +1,38 @@
+# Install directories
+/bin/
+/cfg/
+/db/
+/dbd/
+/html/
+/include/
+/lib/
+/templates/
+
+# Local configuration files
+/configure/*.local
+/configure/os
+
+# iocBoot generated files
+/iocBoot/*ioc*/cdCommands
+/iocBoot/*ioc*/dllPath.bat
+/iocBoot/*ioc*/envPaths
+/iocBoot/*ioc*/relPaths.sh
+
+# iocsh
+.iocsh_history
+
+# Build directories
+O.*/
+_build/
+
+# Common files created by other tools
+.DS_Store
+
+# Python related
 *.pyc
 *.pyo
+python*
+
+# extras
 *~
 *.dbl
-O.*
-bin
-include
-lib
-db
-dbd
-python*
-_build
-envPaths
-configure/os

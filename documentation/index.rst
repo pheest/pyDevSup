@@ -11,9 +11,18 @@ pydevsup documentation
 It currently supports EPICS >=3.14.12 and python versions >=3.6
 The numpy package is also required.
 
-The source can be found at http://github.com/mdavidsaver/pyDevSup
+It is not possible to use the module with a static build configuration.
+The code will build, but it will not work.
+The reason is that EPICS database defintions are created in two modules:
+1. The _dbapi module creates the defintion of 'Python Device'.
+2. The softIocPy module implements device types such as longin that use 'Python Device'.
+   In a static build, these are held in seperate EPICS databases.
+   Consequently the softIocPy module does not know what a 'Python Device' is.
+   In a shared library build there is ony one database, held by the underlying EPICS base library.
 
-File releases are available at https://github.com/mdavidsaver/pyDevSup/releases
+The source can be found at http://github.com/epics-modules/pyDevSup
+
+File releases are available at https://github.com/epics-modules/pyDevSup/releases
 
 Contents:
 

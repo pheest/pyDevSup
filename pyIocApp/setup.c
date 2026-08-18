@@ -23,6 +23,10 @@
 #include <alarm.h>
 
 #include "pydevsup.h"
+#ifdef _WIN32
+#include <direct.h>
+#define PATH_MAX _MAX_PATH
+#endif
 
 static void cleanupPy(void *junk)
 {
@@ -130,7 +134,10 @@ static void cleanupPrep(initHookState state)
 static void pySetupReg(void)
 {
     Py_InitializeEx(0);
+#if PY_VERSION_HEX < 0x03070000
+    /* See https://docs.python.org/3/c-api/threads.html#c.PyEval_InitThreads */
     PyEval_InitThreads();
+#endif
 
     setupPyPath();
 

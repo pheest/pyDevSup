@@ -1,7 +1,7 @@
 name: pyDevSup
 
 # Trigger on pushes and PRs to any branch
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 env:
     SETUP_PATH: .ci-local:.ci
@@ -159,6 +159,7 @@ jobs:
             python: "3.7"
             container: "python:3.7"
             profile: deb10
+            test: # no - RuntimeError: Requires Base >=3.15 for iocBuildIsolated()
 
           - os: windows-latest
             cmp: vs2026

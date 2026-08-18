@@ -26,26 +26,15 @@ else:
         pass
     out = open(sys.argv[1], 'w')
 
-"""
-3.2      sysconfig
-3.10     sysconfig.get_path
-3.10.13  distutils is deprecated.
-3.12     distutils was removed.
-"""
-if sys.version_info >= (3,10,):
-    from sysconfig import get_config_var, get_path
-    incdirs = [get_path("include")]
-else:
-    from distutils.sysconfig import get_config_var, get_python_inc
-    incdirs = [get_python_inc()]
+from sysconfig import get_config_var, get_path, get_python_version
 
-libdir = get_config_var('LIBDIR') or ''
+incdirs = [get_path("include")]
+if sys.platform == 'win32':
+    libdir = os.path.join(sys.prefix, 'libs')
+else:
+    libdir = get_config_var('LIBDIR') or ''
 
 have_np='NO'
-
-"""
-numpy 1.18, numpy.get_include()
-"""
 try:
     from numpy import get_include
     numpy_dir = [get_include()]
@@ -54,8 +43,8 @@ try:
 except ImportError:
     pass
 
-print('TARGET_CFLAGS +=',get_config_var('BASECFLAGS'), file=out)
-print('TARGET_CXXFLAGS +=',get_config_var('BASECFLAGS'), file=out)
+print('TARGET_CFLAGS +=',get_config_var('BASECFLAGS') or '', file=out)
+print('TARGET_CXXFLAGS +=',get_config_var('BASECFLAGS') or '', file=out)
 
 print('PY_VER :=',get_config_var('VERSION'), file=out)
 ldver = get_config_var('LDVERSION')
