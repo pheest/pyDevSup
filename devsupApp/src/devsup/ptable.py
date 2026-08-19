@@ -225,7 +225,7 @@ class _ParamSupBase(object):
             self.vdata = self.vfld.getarray()
         if rec.PINI == "YES":
             # record processing will have updated the field.
-            sel.inst.stat = NO_ALARM
+            self.inst.stat = NO_ALARM
             
     def detach(self, rec):
         pass
@@ -246,7 +246,7 @@ class _ParamSupGet(_ParamSupBase):
                 self.vfld.putval(value)
             else:
                 if len(value)>len(self.vdata):
-                    nval = nval[:len(self.vdata)]
+                    value = nval[:len(self.vdata)]
                 self.vdata[:len(value)] = value
                 self.vfld.putarraylen(len(value))
             if alarm:
@@ -278,9 +278,9 @@ class _ParamSupSet(_ParamSupGet):
                 # Execute actions
                 self.inst._exec(oval)
                 rec.setSevr(self.inst.alarm, self.inst.stat, self.inst.amsg)
-            for G in self.inst._groups:
-                G._exec()
-
+                for G in self.inst._groups:
+                    G._exec()
+                    
 class TableBase(object):
     """Base class for all parameter tables.
     
