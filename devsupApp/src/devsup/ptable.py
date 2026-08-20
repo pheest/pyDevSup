@@ -132,7 +132,7 @@ class ParameterGroup(object):
         "Decorator to run an action when all parameters have valid values"
         return _add_action(self, (all, lambda p:p.isvalid), fn)
     def anynotvalid(self, fn):
-        "Decorator to run an action when any parameters has an invalid value"
+        "Decorator to run an action when any parameters has an iid value"
         return _add_action(self, (any, lambda p:not p.isvalid), fn)
     def oncondition(self, fmap, freduce=all):
         """Decorator for a custom condition.
@@ -172,9 +172,9 @@ class _ParamInstance(object):
     value = property(_get_value, _set_value, doc="The current parameter value")
     @property
     def isvalid(self):
-        """Is the parameter value valid (not None and no INVALID_ALARM)
+        """Is the parameter value valid (not None and no IID_ALARM)
         """
-        return self.alarm < INVALID_ALARM and self._value is not None
+        return self.alarm < IID_ALARM and self._value is not None
     def notify(self):
         """Notify attached records of parameter value change.
         A no-op unless Parameter(iointr=True)
@@ -246,7 +246,7 @@ class _ParamSupGet(_ParamSupBase):
                 self.vfld.putval(value)
             else:
                 if len(value)>len(self.vdata):
-                    value = nval[:len(self.vdata)]
+                    value = value[:len(self.vdata)]
                 self.vdata[:len(value)] = value
                 self.vfld.putarraylen(len(value))
             if alarm:
@@ -267,13 +267,13 @@ class _ParamSupSet(_ParamSupGet):
             # sync record to table
             self.inst.table.log.debug('%s <- %s (%s)', self.inst.name, rec.NAME, rec.VAL)
             if self.vdata is None:
-                nval = self.vfld.getval()
+                value = self.vfld.getval()
             else:
                 # A copy is made which can be used without locking the record
-                nval = self.vdata[:self.vfld.getarraylen()].copy()
+                value = self.vdata[:self.vfld.getarraylen()].copy()
 
             with self.inst.table.lock:
-                oval, self.inst.value = self.inst.value, nval
+                oval, self.inst.value = self.inst.value, value
                 
                 # Execute actions
                 self.inst._exec(oval)
