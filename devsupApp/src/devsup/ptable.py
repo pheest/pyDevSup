@@ -10,7 +10,7 @@ import threading, inspect
 _tables = {}
 
 from .db import IOScanListThread
-from . import INVALID_ALARM, UDF_ALARM, NO_ALARM
+from . import INVALID_ALARM, UDF_ALARM, COMM_ALARM
 
 __all__ = [
     'Parameter',
@@ -161,7 +161,7 @@ class _ParamInstance(object):
         self.name = name
         self.table, self.scan, self._value = table, scan, None
         self.alarm, self.actions = 0, []
-        self.stat = UDF_ALARM
+        self.stat = None
         self.amsg = None
         self._groups = set()
     def _get_value(self):
@@ -223,9 +223,6 @@ class _ParamSupBase(object):
         self.vdata = None
         if len(self.vfld)>1:
             self.vdata = self.vfld.getarray()
-        if rec.PINI == "YES":
-            # record processing will have updated the field.
-            self.inst.stat = NO_ALARM
             
     def detach(self, rec):
         pass
@@ -240,13 +237,15 @@ class _ParamSupGet(_ParamSupBase):
         with self.inst.table.lock:
             value, alarm, stat, amsg = self.inst.value, self.inst.alarm, self.inst.stat, self.inst.amsg
             self.inst.table.log.debug('%s -> %s (%s)', self.inst.name, rec.NAME, value)
+            if stat is None:
+                stat = COMM_ALARM
 
         if value is not None:
             if self.vdata is None:
                 self.vfld.putval(value)
             else:
                 if len(value)>len(self.vdata):
-                    value = nval[:len(self.vdata)]
+                    value = value[:len(self.vdata)]
                 self.vdata[:len(value)] = value
                 self.vfld.putarraylen(len(value))
             if alarm:
@@ -267,17 +266,19 @@ class _ParamSupSet(_ParamSupGet):
             # sync record to table
             self.inst.table.log.debug('%s <- %s (%s)', self.inst.name, rec.NAME, rec.VAL)
             if self.vdata is None:
-                nval = self.vfld.getval()
+                value = self.vfld.getval()
             else:
                 # A copy is made which can be used without locking the record
-                nval = self.vdata[:self.vfld.getarraylen()].copy()
+                value = self.vdata[:self.vfld.getarraylen()].copy()
 
             with self.inst.table.lock:
-                oval, self.inst.value = self.inst.value, nval
-                
+                oval, self.inst.value = self.inst.value, value
+                stat = self.inst.stat
+                if stat is None:
+                    stat = COMM_ALARM
                 # Execute actions
                 self.inst._exec(oval)
-                rec.setSevr(self.inst.alarm, self.inst.stat, self.inst.amsg)
+                rec.setSevr(self.inst.alarm, stat, self.inst.amsg)
                 for G in self.inst._groups:
                     G._exec()
                     
