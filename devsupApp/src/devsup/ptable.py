@@ -159,22 +159,16 @@ class _ParamInstance(object):
     """
     def __init__(self, table, name, scan):
         self.name = name
-        self.table, self.scan, self._value = table, scan, None
+        self.table, self.scan, self.value = table, scan, None
         self.alarm, self.actions = 0, []
         self.stat = None
         self.amsg = None
         self._groups = set()
-    def _get_value(self):
-        return self._value
-    def _set_value(self, val):
-        self._value = val
-        self.alarm = 3 if val is None else 0
-    value = property(_get_value, _set_value, doc="The current parameter value")
     @property
     def isvalid(self):
         """Is the parameter value valid (not None and no INVALID_ALARM)
         """
-        return self.alarm < INVALID_ALARM and self._value is not None
+        return self.alarm < INVALID_ALARM and self.value is not None
     def notify(self):
         """Notify attached records of parameter value change.
         A no-op unless Parameter(iointr=True)
@@ -217,9 +211,12 @@ class _ParamSupBase(object):
     def __init__(self, inst, rec, info):
         self.inst, self.info = inst, info
         # Determine which field to use to store the value
-        fname = rec.info('pyfield','VAL')
-        self.raw = fname!='RVAL'
-        self.vfld = rec.field(fname)
+        self.raw = False
+        try:
+            self.vfld = rec.field("RVAL")
+            self.raw = True
+        except KeyError:
+            self.vfld = rec.field("VAL")
         self.vdata = None
         if len(self.vfld)>1:
             self.vdata = self.vfld.getarray()
@@ -248,8 +245,7 @@ class _ParamSupGet(_ParamSupBase):
                     value = value[:len(self.vdata)]
                 self.vdata[:len(value)] = value
                 self.vfld.putarraylen(len(value))
-            if alarm:
-                rec.setSevr(alarm, stat, amsg)
+            rec.setSevr(alarm, stat, amsg)
         else:
             # undefined value
             rec.setSevr(INVALID_ALARM, UDF_ALARM)
@@ -273,11 +269,11 @@ class _ParamSupSet(_ParamSupGet):
 
             with self.inst.table.lock:
                 oval, self.inst.value = self.inst.value, value
+                # Execute actions
+                self.inst._exec(oval)
                 stat = self.inst.stat
                 if stat is None:
                     stat = COMM_ALARM
-                # Execute actions
-                self.inst._exec(oval)
                 rec.setSevr(self.inst.alarm, stat, self.inst.amsg)
                 for G in self.inst._groups:
                     G._exec()
