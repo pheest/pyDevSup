@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import time, sched, urllib2, json
+import time, sched, urllib, json
+import urllib.request # https://stackoverflow.com/questions/37042152/python-3-5-1-urllib-has-no-attribute-request
 from devsup.db import IOScanListBlock
 from devsup.hooks import initHook
 from devsup.util import StoppableThread
@@ -20,19 +21,21 @@ class BPLReport(object):
 
     def process(self):
         self.result = None
-        R = urllib2.urlopen(self.url, timeout=3)
+        R = None
         try:
+            R = urllib.request.urlopen(self.url, timeout=3)
             if R.getcode()!=200:
-                print 'Fail',R.getcode(), self.url
+                print ('Fail',R.getcode(), self.url)
                 self.result = None
                 return
             self.result = json.load(R)
         except:
-            print 'Error fetching',self.url
+            print ('Error fetching',self.url)
             import traceback
             traceback.print_exc()
         finally:
-            R.close()
+            if R is not None:
+                R.close()
             self.result_time = time.time()
         self.scan.interrupt(reason = self.result)
 
@@ -51,7 +54,7 @@ class ReportRunner(StoppableThread):
         try:
             R.process()
         except:
-            print 'Error in processing',R.url
+            print ('Error in processing',R.url)
             import traceback
             traceback.print_exc()
             R.fail()
@@ -59,15 +62,15 @@ class ReportRunner(StoppableThread):
     def run(self):
         self._S = S = sched.scheduler(time.time, self._sleep)
 
-        for R in BPLReport.reports.itervalues():
+        for R in iter(BPLReport.reports.values()):
             S.enter(0, 0, self._proc, (R,))
 
         try:
             S.run()
         except self._Done:
-            print 'BPL worker exit'
+            print ('BPL worker exit')
         except:
-            print 'Error in scheduler'
+            print ('Error in scheduler')
             import traceback
             traceback.print_exc()
 
@@ -76,13 +79,13 @@ _worker = ReportRunner()
 @initHook("AfterIocRunning")
 def _startWorker():
     _worker.start()
-    print 'BPL worker started'
+    print ('BPL worker started')
 
 @initHook("AtIocExit")
 def _stopWorker():
-    print 'BPL worker stopping'
+    print ('BPL worker stopping')
     _worker.join()
-    print 'BPL worker stopped'
+    print ('BPL worker stopped')
 
 class ReportItem(object):
     raw = True
