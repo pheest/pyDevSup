@@ -211,12 +211,8 @@ class _ParamSupBase(object):
     def __init__(self, inst, rec, info):
         self.inst, self.info = inst, info
         # Determine which field to use to store the value
-        self.raw = False
-        try:
-            self.vfld = rec.field("RVAL")
-            self.raw = True
-        except KeyError:
-            self.vfld = rec.field("VAL")
+        self.raw = True
+        self.vfld = rec.field('VAL')
         self.vdata = None
         if len(self.vfld)>1:
             self.vdata = self.vfld.getarray()
