@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import logging
+import sys
 LOG = logging.getLogger(__name__)
 
 import threading, inspect
@@ -208,14 +209,24 @@ class _ParamGroupInstance(object):
         return True
 
 class _ParamSupBase(object):
+    @property
+    def vdata(self):
+        vdata = None
+        if len(self.vfld)>1:
+            vdata = self.vfld.getarray()
+        return vdata
+        
     def __init__(self, inst, rec, info):
         self.inst, self.info = inst, info
         # Determine which field to use to store the value
         self.raw = True
-        self.vfld = rec.field('VAL')
-        self.vdata = None
-        if len(self.vfld)>1:
-            self.vdata = self.vfld.getarray()
+        try:
+            self.vfld = rec.field("RVAL")
+            self.raw = False
+            print("rec.NAME=" + rec.NAME + " does have RVAL field", file=sys.stderr)
+        except KeyError:
+            print("rec.NAME=" + rec.NAME + " does not have RVAL field", file=sys.stderr)
+            self.vfld = rec.field("VAL")
             
     def detach(self, rec):
         pass
@@ -232,6 +243,9 @@ class _ParamSupGet(_ParamSupBase):
             self.inst.table.log.debug('%s -> %s (%s)', self.inst.name, rec.NAME, value)
             if stat is None:
                 stat = COMM_ALARM
+            if self.raw and type(value) is float:
+                self.raw = True
+                self.vfld = rec.field("VAL")
 
         if value is not None:
             if self.vdata is None:
@@ -247,6 +261,11 @@ class _ParamSupGet(_ParamSupBase):
             rec.setSevr(INVALID_ALARM, UDF_ALARM)
 
 class _ParamSupSet(_ParamSupGet):
+    def __init__(self, inst, rec, info):
+        super().__init__(inst, rec, info)
+        self.raw = True
+        self.vfld = rec.field('VAL')
+        
     def process(self, rec, reason=None):
         """Write a value from the record into the table
         """
