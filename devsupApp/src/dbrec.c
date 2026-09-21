@@ -135,7 +135,6 @@ static PyObject* pyRecord_setSevr(pyRecord *self, PyObject *args, PyObject *kws)
     if(sevr<firstEpicsAlarmSev || sevr>lastEpicsAlarmSev
        || stat<firstEpicsAlarmCond || stat>lastEpicsAlarmCond)
     {
-        assert(0);
         PyErr_Format(PyExc_ValueError, "%s: Can't set alarms %d %d", prec->name, sevr, stat);
         return NULL;
     }
@@ -258,7 +257,6 @@ static PyObject *pyRecord_asyncFinish(pyRecord *self, PyObject *args, PyObject *
         pact = prec->pact;
         if(pact) {
             ret = (*rsup->process)(prec);
-            assert(ret == 0);
             /* Out devsup always clears PACT if initially set */
         }
         dbScanUnlock(prec);

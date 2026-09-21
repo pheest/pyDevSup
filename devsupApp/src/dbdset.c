@@ -71,10 +71,12 @@ static long parse_link(dbCommon *prec, const char* src)
     Py_DECREF(ret);
 
     ret = PyObject_GetAttrString(priv->support, "raw");
-    if(!ret)
+    if(!ret) {
         PyErr_Clear();
-    else if(ret && PyObject_IsTrue(ret)==1)
         priv->rawsupport = 1;
+    }
+    else if(ret && PyObject_IsTrue(ret)==0)
+        priv->rawsupport = 0;
     Py_XDECREF(ret);
     if(PyErr_Occurred())
         return -1;
@@ -180,15 +182,15 @@ static long report(int lvl)
     return 0;
 }
 
-static long init_record(dbCommon *prec)
+static long init_record_in(dbCommon *prec)
 {
     return 0;
 }
 
-static long init_record2(dbCommon *prec)
+static long init_record_out(dbCommon *prec)
 {
     pyDevice *priv = prec->dpvt;
-    if(priv && priv->rawsupport)
+    if(priv && !priv->rawsupport)
         return 2;
     return 0;
 }
@@ -214,7 +216,6 @@ static long add_record(dbCommon *prec)
             ret = dbFindField(&ent, "OUT");
 
         if(ret) {
-            fprintf(stderr, "%s: Unable to find INP/OUT\n", prec->name);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             return 0;
         }
@@ -222,8 +223,6 @@ static long add_record(dbCommon *prec)
         if(ent.pflddes->field_type!=DBF_INLINK
                 && ent.pflddes->field_type!=DBF_OUTLINK)
         {
-            fprintf(stderr, "%s: INP/OUT has unacceptible type %d\n",
-                    prec->name, ent.pflddes->field_type);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             return 0;
         }
@@ -234,7 +233,6 @@ static long add_record(dbCommon *prec)
         scanIoInit(&priv->scan);
 
         if(priv->plink->type != INST_IO) {
-            fprintf(stderr, "%s: Has invalid link type %d\n", prec->name, priv->plink->type);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             free(priv);
             return 0;
@@ -254,7 +252,6 @@ static long add_record(dbCommon *prec)
     {
         char *msg=priv->plink->value.instio.string;
         if(!msg || *msg=='\0') {
-            fprintf(stderr, "%s: Empty link string\n", prec->name);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             return 0;
         }
@@ -263,7 +260,6 @@ static long add_record(dbCommon *prec)
     pystate = PyGILState_Ensure();
 
     if(parse_link(prec, priv->plink->value.instio.string)) {
-        fprintf(stderr, "%s: Exception in add_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
         ret = S_db_errArg;
@@ -288,7 +284,6 @@ static long del_record(dbCommon *prec)
     pystate = PyGILState_Ensure();
 
     if(detach_common(prec)) {
-        fprintf(stderr, "%s: Exception in del_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
     }
@@ -333,7 +328,6 @@ static long process_record(dbCommon *prec)
     pystate = PyGILState_Ensure();
 
     if(process_common(prec)) {
-        fprintf(stderr, "%s: Exception in process_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
         (void)recGblSetSevr(prec, READ_ALARM, INVALID_ALARM);
@@ -347,12 +341,20 @@ static long process_record(dbCommon *prec)
     return 0;
 }
 
-static long process_record2(dbCommon *prec)
+static long process_record_out(dbCommon *prec)
 {
     pyDevice *priv = prec->dpvt;
     long ret = process_record(prec);
-    if(ret==0 && priv && priv->rawsupport)
+    return ret;
+}
+
+static long process_record_in(dbCommon *prec)
+{
+    pyDevice *priv = prec->dpvt;
+    long ret = process_record(prec);
+    if(ret==0 && priv && !priv->rawsupport) {
         ret = 2;
+    }
     return ret;
 }
 
@@ -374,18 +376,14 @@ typedef struct {
     DEVSUPFUN linconv;
 } dset6;
 
-static dset6 pydevsupComSpec = {{6, (DEVSUPFUN)&report, (DEVSUPFUN)&init,
-                             (DEVSUPFUN)&init_record,
-                             (DEVSUPFUN)&get_iointr_info},
-                            (DEVSUPFUN)&process_record};
 static dset6 pydevsupComOut = {{6, (DEVSUPFUN)&report, (DEVSUPFUN)&init,
-                                (DEVSUPFUN)&init_record2,
+                                (DEVSUPFUN)&init_record_out,
                                 (DEVSUPFUN)&get_iointr_info},
-                               (DEVSUPFUN)&process_record};
+                               (DEVSUPFUN)&process_record_out};
 static dset6 pydevsupComIn = {{6, (DEVSUPFUN)&report, (DEVSUPFUN)&init,
-                                (DEVSUPFUN)&init_record,
+                                (DEVSUPFUN)&init_record_in,
                                 (DEVSUPFUN)&get_iointr_info},
-                               (DEVSUPFUN)&process_record2};
+                               (DEVSUPFUN)&process_record_in};
 
 static long python_asub(aSubRecord* prec)
 {
@@ -406,7 +404,6 @@ static long python_asub(aSubRecord* prec)
         assert(ret==0); /* really shouldn't fail */
 
         if(dbFindInfo(&entry, "pySupportLink")) {
-            fprintf(stderr, "%s: failed to initialize\n", prec->name);        
             dbFinishEntry(&entry);
             (void)recGblSetSevr(prec, INVALID_ALARM, READ_ALARM);
             return 0;
@@ -420,7 +417,6 @@ static long python_asub(aSubRecord* prec)
 
         prec->dpvt = priv;
         if(parse_link((dbCommon*)prec, inpstr)) {
-            fprintf(stderr, "%s: failed to parse pySupportLink: %s\n", prec->name, inpstr);
             PyErr_Print();
             PyErr_Clear();
             dbFinishEntry(&entry);
@@ -435,7 +431,6 @@ static long python_asub(aSubRecord* prec)
         pystate = PyGILState_Ensure();
 
     if(priv->support && process_common((dbCommon*)prec)) {
-        fprintf(stderr, "%s: Exception in process_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
         (void)recGblSetSevr(prec, INVALID_ALARM, READ_ALARM);
@@ -455,9 +450,8 @@ rset* pvar_rset_aSubRSET;
 
 int isPyRecord(dbCommon *prec)
 {
-    if(prec->dset==(dset*)&pydevsupComSpec
-            || prec->dset==(dset*)&pydevsupComIn
-            || prec->dset==(dset*)&pydevsupComOut)
+    if(prec->dset==(dset*)&pydevsupComIn ||
+       prec->dset==(dset*)&pydevsupComOut)
         return 1;
     if(prec->rset==pvar_rset_aSubRSET) {
         aSubRecord *psub = (aSubRecord*)prec;
@@ -477,13 +471,11 @@ int canIOScanRecord(dbCommon *prec)
 
 static
 const dset* pydsets[] = {
-    &pydevsupComSpec.com,
     &pydevsupComIn.com,
     &pydevsupComOut.com,
 };
 
 static const char* pydsetnames[] = {
-    "pydevsupComSpec",
     "pydevsupComIn",
     "pydevsupComOut",
 };

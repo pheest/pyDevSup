@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import logging
+import sys
 LOG = logging.getLogger(__name__)
 
 import threading, inspect
@@ -211,8 +212,14 @@ class _ParamSupBase(object):
     def __init__(self, inst, rec, info):
         self.inst, self.info = inst, info
         # Determine which field to use to store the value
-        self.raw = True
-        self.vfld = rec.field('VAL')
+        rtype = rec.rtype()
+        self.raw = False
+        if rtype=='bi' or rtype=='mbbiDirect':
+            self.raw = True
+        if self.raw:
+            self.vfld = rec.field("RVAL")
+        else:
+            self.vfld = rec.field("VAL")
         self.vdata = None
         if len(self.vfld)>1:
             self.vdata = self.vfld.getarray()
@@ -232,8 +239,10 @@ class _ParamSupGet(_ParamSupBase):
             self.inst.table.log.debug('%s -> %s (%s)', self.inst.name, rec.NAME, value)
             if stat is None:
                 stat = COMM_ALARM
-
+        
         if value is not None:
+            if rec.UDF:
+                rec.UDF = 0
             if self.vdata is None:
                 self.vfld.putval(value)
             else:
@@ -270,7 +279,13 @@ class _ParamSupSet(_ParamSupGet):
                 stat = self.inst.stat
                 if stat is None:
                     stat = COMM_ALARM
-                rec.setSevr(self.inst.alarm, stat, self.inst.amsg)
+                if self.inst.value is not None:
+                    if rec.UDF:
+                        rec.UDF = 0
+                    rec.setSevr(self.inst.alarm, stat, self.inst.amsg)
+                else:
+                    # undefined value
+                    rec.setSevr(INVALID_ALARM, UDF_ALARM)
                 for G in self.inst._groups:
                     G._exec()
                     

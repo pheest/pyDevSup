@@ -142,7 +142,7 @@ static int assign_array(DBADDR *paddr, PyObject *arr)
     {
         prset = dbGetRset(paddr);
         void *datasave=paddr->pfield;
-        if (prset->get_array_info)
+        if (prset && prset->get_array_info)
         {
             /* array */
             long noe, off;
@@ -165,7 +165,7 @@ static int assign_array(DBADDR *paddr, PyObject *arr)
 
     if(elemsize!=PyArray_ITEMSIZE(aval)) {
         PyErr_Format(PyExc_AssertionError, "item size mismatch %u %u",
-                    elemsize, (unsigned)PyArray_ITEMSIZE(aval) );
+                     elemsize, (unsigned)PyArray_ITEMSIZE(aval) );
         Py_DECREF(aval);
         return 1;
     }
