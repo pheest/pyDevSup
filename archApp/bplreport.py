@@ -107,7 +107,7 @@ class ReportItem(object):
         invalid = True
         if R is not None and len(R)>self.idx:
             try:
-                rec.VAL = float(str(R[self.idx][self.attrib]).translate(None,','))
+                rec.VAL = float(str(R[self.idx][self.attrib]).replace(',', ''))
             except KeyError:
                 pass
             else:
@@ -135,7 +135,7 @@ class ReportItem(object):
         invalid = True
         if R is not None and len(R)>self.idx:
             try:
-                rec.VAL = R[self.idx][self.attrib].encode('ascii')
+                rec.VAL = R[self.idx][self.attrib]
             except KeyError:
                 pass
             else:
