@@ -12,7 +12,7 @@ class Device(object):
     def __init__(self, rec, fname):
         if not fname:
             return
-        print 'Load', fname,'into',rec.NAME
+        print('Load', fname,'into',rec.NAME)
         data = numpy.load(fname)
         assert len(data.shape)==1, 'only 1D supported'
         val = rec.field('VAL')
