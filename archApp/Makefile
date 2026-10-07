@@ -6,6 +6,7 @@ include $(TOP)/configure/CONFIG_PY
 
 PY += bplreport.py
 DB += applmetrics.db
+DB += bplstorage.db
 
 include $(TOP)/configure/RULES
 include $(TOP)/configure/RULES_PY

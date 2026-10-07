@@ -3,11 +3,6 @@
 from __future__ import print_function
 
 import sys, gc, inspect, time
-try:
-    InstanceType = None
-    from types import InstanceType
-except ImportError:
-    pass # py3
 
 class StatsDelta(object):
   """GC statistics tracking.
@@ -81,9 +76,6 @@ def gcstats():
     K = type(obj)
     if K is StatsDelta:
       continue # avoid counting ourselves
-
-    elif InstanceType is not None and K is InstanceType: # instance of an old-style class
-      K = getattr(obj, '__class__', K)
 
     # Track types as strings to avoid holding references
     K = str(K)

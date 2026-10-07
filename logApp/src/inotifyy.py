@@ -14,7 +14,7 @@ del k
 
 def decodeMask(mask):
     ret = []
-    for k,v in _flags.iteritems():
+    for k,v in _flags.items():
         if mask&v:
             ret.append(k)
     return '%s %s'%(hex(mask),ret)

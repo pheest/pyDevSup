@@ -40,7 +40,7 @@ assert nPb==sampPbucket
 remd = mult-nPb
 assert remd<0.5 and remd>0, "assumption violated" # remd==0 drops no samples, remd>0.5 should add samples
 delta = int(numpy.round(nPb/remd))
-print 'fpm delta mult', nPb, 'frac', delta
+print('fpm delta mult', nPb, 'frac', delta)
 
 def deleteEveryNth(arr, N):
     '''Optimized version of
@@ -83,7 +83,7 @@ class Dev(AsyncOffload):
         raw = deleteEveryNth(raw, delta)
 
         # truncate to whole turns
-        turns = len(raw)/sampPturn
+        turns = len(raw)//sampPturn
         raw = raw[:turns*sampPturn]
 
         # determine buckets w/ beam
@@ -129,7 +129,7 @@ class Dev(AsyncOffload):
             fill *= S1
             S2 = scale/fillbyturn[0]
             fillbyturn *= S2
-            #print 'factor', S1, S2
+            #print('factor', S1, S2)
         else:
             fill = numpy.zeros(fill.shape, dtype=fill.dtype)
             fillbyturn = numpy.zeros(fillbyturn.shape, dtype=fillbyturn.dtype)
@@ -145,7 +145,7 @@ class Dev(AsyncOffload):
             bindx = numpy.asarray([0])
             pvar = 0.0
 
-        #print 'ellapsed 2 %.03f'%(time.time()-TS)
+        #print('ellapsed 2 %.03f'%(time.time()-TS))
         return {
             'ok':True,
             'fill':fill,

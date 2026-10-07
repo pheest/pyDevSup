@@ -2,7 +2,7 @@
 
 < envPaths
 
-#epicsEnvSet("APPLNAME", "arcapp01.cs.nsls2.local:17665")
+# Update to your archiver mgmt endpoint
 epicsEnvSet("APPLNAME", "capp02.cs.nsls2.local:17665")
 
 py "import bplreport"

@@ -8,9 +8,9 @@ cd("$(TOP)")
 
 #epicsEnvSet("PYTHONPATH", "${TOP}/python/$(ARCH)")
 
-dbLoadRecords("db/weather.db","P=CF:Ext{KISP},LOC=KISP")
-#dbLoadRecords("db/weather.db","P=CF:Ext{KHWV},LOC=KHWV")
-dbLoadRecords("db/weather.db","P=CF:Ext{EGTK},LOC=EGTK")
+dbLoadRecords("db/weather.db","P=CF:Ext{KISP},LOC=KISP")  # Long Island MacArthur Airport
+#dbLoadRecords("db/weather.db","P=CF:Ext{KHWV},LOC=KHWV") # Brookhaven Calabro Airport
+dbLoadRecords("db/weather.db","P=CF:Ext{EGTK},LOC=EGTK")  # London Oxford Airport (Kidlington)
 
 iocInit()
 

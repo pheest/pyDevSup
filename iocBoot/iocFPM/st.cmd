@@ -1,4 +1,4 @@
-#!./bin/linux-x86/softIocPy
+#!../../bin/linux-x86_64/softIocPy3.6
 
 epicsEnvSet("ENGINEER","mdavidsaver")
 epicsEnvSet("LOCATION","740")
