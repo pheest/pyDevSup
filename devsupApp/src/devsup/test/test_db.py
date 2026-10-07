@@ -256,7 +256,7 @@ class TestDset(IOCHelper):
             self.assertEqual(rec.VAL, 0)
             self.assertEqual(rec.UDF, 1)
 
-        rec.scan(sync=True)
+        self.assertEqual(rec.scan(sync=True), 0)
 
         with rec:
             self.assertEqual(rec.VAL, 1)

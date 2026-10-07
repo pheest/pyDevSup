@@ -73,10 +73,11 @@ static long parse_link(dbCommon *prec, const char* src)
     ret = PyObject_GetAttrString(priv->support, "raw");
     if(!ret) {
         PyErr_Clear();
+        /* Defaults to 1 if not set. */
         priv->rawsupport = 1;
     }
-    else if(ret && PyObject_IsTrue(ret)==0)
-        priv->rawsupport = 0;
+    else if(ret && PyObject_IsTrue(ret)==1)
+        priv->rawsupport = 1;
     Py_XDECREF(ret);
     if(PyErr_Occurred())
         return -1;
@@ -191,6 +192,7 @@ static long init_record_out(dbCommon *prec)
 {
     pyDevice *priv = prec->dpvt;
     if(priv && !priv->rawsupport)
+        /* This means sucessful read but do not process to clear UDF */
         return 2;
     return 0;
 }
@@ -353,6 +355,7 @@ static long process_record_in(dbCommon *prec)
     pyDevice *priv = prec->dpvt;
     long ret = process_record(prec);
     if(ret==0 && priv && !priv->rawsupport) {
+        /* This means sucessful read but do not process to clear UDF */
         ret = 2;
     }
     return ret;

@@ -212,17 +212,17 @@ class _ParamSupBase(object):
     def __init__(self, inst, rec, info):
         self.inst, self.info = inst, info
         # Determine which field to use to store the value
-        rtype = rec.rtype()
-        self.raw = False
-        if rtype=='bi' or rtype=='mbbiDirect':
-            self.raw = True
-        if self.raw:
-            self.vfld = rec.field("RVAL")
-        else:
-            self.vfld = rec.field("VAL")
+        fname = rec.info('pyfield','VAL')
+        # This value is set by:
+        #     info("pyfield", "RVAL")
+        # in the db file record.
+        # It is used as 'rawsupport' in dbdset.c.
+        self.raw = fname=='RVAL'
+        self.vfld = rec.field(fname)
         self.vdata = None
         if len(self.vfld)>1:
             self.vdata = self.vfld.getarray()
+        self.udf = rec.field("UDF")
             
     def detach(self, rec):
         pass
@@ -241,8 +241,8 @@ class _ParamSupGet(_ParamSupBase):
                 stat = COMM_ALARM
         
         if value is not None:
-            if rec.UDF:
-                rec.UDF = 0
+            if self.udf.getval():
+                self.udf.putval(0)
             if self.vdata is None:
                 self.vfld.putval(value)
             else:
@@ -280,8 +280,8 @@ class _ParamSupSet(_ParamSupGet):
                 if stat is None:
                     stat = COMM_ALARM
                 if self.inst.value is not None:
-                    if rec.UDF:
-                        rec.UDF = 0
+                    if self.udf.getval():
+                        self.udf.putval(0)
                     rec.setSevr(self.inst.alarm, stat, self.inst.amsg)
                 else:
                     # undefined value
