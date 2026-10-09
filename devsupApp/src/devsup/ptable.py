@@ -211,8 +211,13 @@ class _ParamSupBase(object):
     def __init__(self, inst, rec, info):
         self.inst, self.info = inst, info
         # Determine which field to use to store the value
-        self.raw = True
-        self.vfld = rec.field('VAL')
+        fname = rec.info('pyfield','VAL')
+        # This value is set by:
+        #     info("pyfield", "RVAL")
+        # in the db file record.
+        # It is used as 'rawsupport' in dbdset.c.
+        self.raw = fname!='RVAL'
+        self.vfld = rec.field(fname)
         self.vdata = None
         if len(self.vfld)>1:
             self.vdata = self.vfld.getarray()
@@ -230,10 +235,13 @@ class _ParamSupGet(_ParamSupBase):
         with self.inst.table.lock:
             value, alarm, stat, amsg = self.inst.value, self.inst.alarm, self.inst.stat, self.inst.amsg
             self.inst.table.log.debug('%s -> %s (%s)', self.inst.name, rec.NAME, value)
-            if stat is None:
-                stat = COMM_ALARM
+            if alarm and value is not None:
+                # This resets the alarm status after the current sucessful transfer.
+                self.inst.alarm = 0
 
         if value is not None:
+            if stat is None:
+                stat = COMM_ALARM
             if self.vdata is None:
                 self.vfld.putval(value)
             else:
