@@ -3,7 +3,6 @@
 from __future__ import print_function
 
 import logging
-import sys
 LOG = logging.getLogger(__name__)
 
 import threading, inspect
@@ -11,7 +10,7 @@ import threading, inspect
 _tables = {}
 
 from .db import IOScanListThread
-from . import INVALID_ALARM, UDF_ALARM, COMM_ALARM
+from . import INVALID_ALARM, UDF_ALARM, COMM_ALARM, NO_ALARM
 
 __all__ = [
     'Parameter',
@@ -239,10 +238,14 @@ class _ParamSupGet(_ParamSupBase):
             self.inst.table.log.debug('%s -> %s (%s)', self.inst.name, rec.NAME, value)
             if stat is None:
                 stat = COMM_ALARM
+            if value is not None:
+                # Any previous alarm status is cleared on a successful transfer.
+                self.inst.alarm = NO_ALARM
+                if self.udf.getval():
+                    # Some record types only clear the UDF field if RVAL processing is used.
+                    self.udf.putval(0)
         
         if value is not None:
-            if self.udf.getval():
-                self.udf.putval(0)
             if self.vdata is None:
                 self.vfld.putval(value)
             else:
@@ -281,6 +284,7 @@ class _ParamSupSet(_ParamSupGet):
                     stat = COMM_ALARM
                 if self.inst.value is not None:
                     if self.udf.getval():
+                        # Some record types only clear the UDF field if RVAL processing is used.
                         self.udf.putval(0)
                     rec.setSevr(self.inst.alarm, stat, self.inst.amsg)
                 else:

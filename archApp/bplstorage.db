@@ -7,14 +7,14 @@ record(stringin, "$(P)Name:$(N)-I") {
 
 record(ai, "$(P)Size:$(N)-I") {
     field(DTYP, "Python Device")
-    field(INP , "@bplreport fetch_string storage.$(N).available_space")
+    field(INP , "@bplreport fetch_float storage.$(N).available_space")
     field(SCAN, "I/O Intr")
     field(TSE , "-2")
 }
 
 record(ai, "$(P)Pcnt:$(N)-I") {
     field(DTYP, "Python Device")
-    field(INP , "@bplreport fetch_string storage.$(N).available_space_percent")
+    field(INP , "@bplreport fetch_float storage.$(N).available_space_percent")
     field(SCAN, "I/O Intr")
     field(TSE , "-2")
     field(HOPR, "100")
