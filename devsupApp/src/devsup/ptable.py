@@ -10,7 +10,7 @@ import threading, inspect
 _tables = {}
 
 from .db import IOScanListThread
-from . import INVALID_ALARM, UDF_ALARM, COMM_ALARM
+from . import INVALID_ALARM, UDF_ALARM, COMM_ALARM, NO_ALARM
 
 __all__ = [
     'Parameter',
@@ -159,11 +159,20 @@ class _ParamInstance(object):
     """
     def __init__(self, table, name, scan):
         self.name = name
-        self.table, self.scan, self.value = table, scan, None
+        self.table, self.scan, self._value = table, scan, None
         self.alarm, self.actions = 0, []
         self.stat = None
         self.amsg = None
         self._groups = set()
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self, value):
+        self._value = value
+        if value is not None and self.alarm != NO_ALARM:
+            # Any prior alarm status is cleared by applying a valid value.
+            self.alarm = NO_ALARM
     @property
     def isvalid(self):
         """Is the parameter value valid (not None and no INVALID_ALARM)
@@ -235,9 +244,6 @@ class _ParamSupGet(_ParamSupBase):
         with self.inst.table.lock:
             value, alarm, stat, amsg = self.inst.value, self.inst.alarm, self.inst.stat, self.inst.amsg
             self.inst.table.log.debug('%s -> %s (%s)', self.inst.name, rec.NAME, value)
-            if alarm and value is not None:
-                # This resets the alarm status after the current sucessful transfer.
-                self.inst.alarm = 0
 
         if value is not None:
             if stat is None:
