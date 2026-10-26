@@ -6,7 +6,7 @@ import tempfile
 import numpy
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from ..db import getRecord
+from .. import db as _db
 from .. import _dbapi
 from .. import _init
 
@@ -57,6 +57,7 @@ class IOCHelper(unittest.TestCase):
         print("testdbCleanup()")
         _dbapi.initHookAnnounce(9999) # our magic/fake AtExit hook
         _dbapi._UTest.testdbCleanup()
+        _db._rec_cache.clear()
 
     def iocInit(self):
         """If not autostart, then this must be called before runtime database access is possible
