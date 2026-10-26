@@ -22,6 +22,7 @@ jobs:
       PROF: ${{ matrix.profile }}
       EXTRA: ${{ matrix.extra }}
       TEST: ${{ matrix.test }}
+      USR_CFLAGS: ${{ matrix.cflags }}
       VV: "1"
 
     strategy:
@@ -42,6 +43,7 @@ jobs:
             configuration: default
             base: "7.0"
             python: "3.9"
+            container: "python:3.9"
             profile: deb11
             test: yes
 
@@ -84,6 +86,7 @@ jobs:
             configuration: default
             base: "7.0"
             python: "3.8"
+            container: "python:3.8"
             profile: latest
             test: yes
 
@@ -92,6 +95,7 @@ jobs:
             configuration: default
             base: "7.0"
             python: "3.9"
+            container: "python:3.9"
             profile: latest
             test: yes
 
@@ -150,6 +154,8 @@ jobs:
             base: "3.15"
             python: "3.13"
             profile: deb13
+            # Base 3.15's bundled flex is K&R C, which newer GCCs (C23 default) reject
+            cflags: "-std=gnu17"
             test: yes
 
           - os: ubuntu-latest
