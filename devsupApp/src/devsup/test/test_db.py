@@ -53,8 +53,30 @@ class TestField(IOCHelper):
             field(FTVL, "DOUBLE")
             field(NELM, "10")
         }
+        record(waveform, "rec:wf:l") {
+            field(FTVL, "LONG")
+            field(NELM, "10")
+        }
         record(waveform, "rec:wf:s") {
             field(FTVL, "STRING")
+            field(NELM, "10")
+        }
+        record(aai, "rec:aai:f") {
+            field(FTVL, "DOUBLE")
+            field(NELM, "10")
+        }
+        record(aai, "rec:aai:l") {
+            field(FTVL, "LONG")
+            field(NELM, "10")
+        }
+        record(aao, "src:aao:f") {
+            field(FTVL, "DOUBLE")
+            field(OUT,  "rec:aai:f PP")
+            field(NELM, "10")
+        }
+        record(aao, "src:aao:l") {
+            field(FTVL, "LONG")
+            field(OUT,  "rec:aai:l PP")
             field(NELM, "10")
         }
     """
@@ -91,34 +113,102 @@ class TestField(IOCHelper):
 
             # TODO: test unicode
 
-    def test_wf_float(self):
-        rec = getRecord("rec:wf:a")
+    def array_float_test(self, src, tgt=None):
+        with src:
+            assert_array_almost_equal(src.VAL, [])
+            if tgt is not None:
+                assert_array_almost_equal(tgt.VAL, [])
 
-        with rec:
-            assert_array_almost_equal(rec.VAL, [])
+            src.VAL = numpy.arange(5)
+            assert_array_almost_equal(src.VAL, numpy.arange(5))
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_almost_equal(tgt.VAL, src.VAL)
 
-            rec.VAL = numpy.arange(5)
-            assert_array_almost_equal(rec.VAL, numpy.arange(5))
-
-            rec.VAL = numpy.arange(10)
-            assert_array_almost_equal(rec.VAL, numpy.arange(10))
+            src.VAL = numpy.arange(10)
+            assert_array_almost_equal(src.VAL, numpy.arange(10))
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_almost_equal(tgt.VAL, src.VAL)
 
             with self.assertRaises(ValueError):
-                rec.VAL = numpy.arange(15)
+                src.VAL = numpy.arange(15)
 
-            rec.VAL = []
-            assert_array_almost_equal(rec.VAL, [])
+            src.VAL = []
+            assert_array_almost_equal(src.VAL, [])
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_almost_equal(tgt.VAL, src.VAL)
 
             # in-place modification
-            fld = rec.field('VAL')
+            fld = src.field('VAL')
             fld.putarraylen(5)
             arr = fld.getarray()
             self.assertEqual(arr.shape, (10,)) # size of NELM
             arr[:5] = numpy.arange(5) # we only fill in the part in use
+            arr[2] = 42.0
+
+            assert_array_almost_equal(src.VAL, [0.0, 1.0, 42.0, 3.0, 4.0])
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_almost_equal(tgt.VAL, src.VAL)
+            
+    def array_long_test(self, src, tgt=None):
+        with src:
+            assert_array_equal(src.VAL, [])
+            if tgt is not None:
+                assert_array_equal(tgt.VAL, [])
+
+            src.VAL = range(5)
+            assert_array_equal(src.VAL, range(5))
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_equal(tgt.VAL, src.VAL)
+
+            src.VAL = range(10)
+            assert_array_equal(src.VAL, range(10))
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_equal(tgt.VAL, src.VAL)
+
+            with self.assertRaises(ValueError):
+                src.VAL = range(15)
+
+            src.VAL = []
+            assert_array_equal(src.VAL, [])
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_equal(tgt.VAL, src.VAL)
+
+            # in-place modification
+            fld = src.field('VAL')
+            fld.putarraylen(5)
+            arr = fld.getarray()
+            self.assertEqual(arr.shape, (10,)) # size of NELM
+            arr[:5] = range(5) # we only fill in the part in use
             arr[2] = 42
 
-            assert_array_almost_equal(rec.VAL, [0, 1, 42, 3, 4])
+            assert_array_equal(src.VAL, [0, 1, 42, 3, 4])
+            if tgt is not None:
+                src.scan(sync=True)
+                assert_array_equal(tgt.VAL, src.VAL)
 
+    def test_wf_float(self):
+        rec = getRecord("rec:wf:a")
+        self.array_float_test(rec)
+
+    def test_wf_long(self):
+        rec = getRecord("rec:wf:l")
+        self.array_long_test(rec)
+        
+    def test_aai_float(self):
+        rec = getRecord("rec:aai:f")
+        self.array_float_test(rec)
+        
+    def test_aai_long(self):
+        rec = getRecord("rec:aai:l")
+        self.array_long_test(rec)
+        
     def test_wf_string(self):
         rec = getRecord("rec:wf:s")
 
@@ -129,6 +219,14 @@ class TestField(IOCHelper):
 
             assert_array_equal(rec.VAL,
                                 numpy.asarray(["zero", "", "one", "This is a really long string which shoul", "", "last"], dtype='S40'))
+            
+    def test_aao_long(self):
+        tgt, src = getRecord('rec:aai:l'), getRecord('src:aao:l')
+        self.array_long_test(src, tgt)
+
+    def test_aao_float(self):
+        tgt, src = getRecord('rec:aai:f'), getRecord('src:aao:f')
+        self.array_float_test(src, tgt)
 
 class TestDset(IOCHelper):
     db = """
