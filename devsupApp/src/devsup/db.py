@@ -335,7 +335,7 @@ class Record(_dbapi._Record):
         try:
             F = self.field(name)
         except ValueError:
-            raise AttributeError('No such field')
+            raise AttributeError('No such field ' + name)
         else:
             return F.getval()
 
