@@ -159,11 +159,20 @@ class _ParamInstance(object):
     """
     def __init__(self, table, name, scan):
         self.name = name
-        self.table, self.scan, self.value = table, scan, None
+        self.table, self.scan, self._value = table, scan, None
         self.alarm, self.actions = 0, []
         self.stat = None
         self.amsg = None
         self._groups = set()
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self, value):
+        self._value = value
+        if value is not None and self.alarm != NO_ALARM:
+            # Any prior alarm status is cleared by applying a valid value.
+            self.alarm = NO_ALARM
     @property
     def isvalid(self):
         """Is the parameter value valid (not None and no INVALID_ALARM)
@@ -239,8 +248,6 @@ class _ParamSupGet(_ParamSupBase):
             if stat is None:
                 stat = COMM_ALARM
             if value is not None:
-                # Any previous alarm status is cleared on a successful transfer.
-                self.inst.alarm = NO_ALARM
                 if self.udf.getval():
                     # Some record types only clear the UDF field if RVAL processing is used.
                     self.udf.putval(0)

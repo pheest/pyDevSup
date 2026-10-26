@@ -6,6 +6,7 @@ from devsup.util import Worker, importmod
 
 from . import _dbapi
 
+_rec_cache = {}
 _no_such_field = object()
 
 __all__ = [
@@ -25,7 +26,12 @@ def getRecord(name):
     >>> R = getRecord("my:record:name")
     Record("my:record:name")
     """
-    return Record(name)
+    try:
+        return _rec_cache[name]
+    except KeyError:
+        rec = Record(name)
+        _rec_cache[name] = rec
+        return rec
 
 class IOScanListBlock(object):
     """A list of records which will be processed together.
