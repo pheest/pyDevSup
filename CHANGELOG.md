@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ptable` alarm status and message: `Parameter` has new `stat` and `amsg`
+  attributes, passed to `setSevr()` for both input and output records.
+  `stat` defaults to `COMM_ALARM` ([#52](https://github.com/epics-modules/pyDevSup/pull/52))
+- Windows `.bat` scripts for running the example IOCs ([#59](https://github.com/epics-modules/pyDevSup/pull/59))
+- Unit tests for `waveform`, `aai` and `aao` array records ([#61](https://github.com/epics-modules/pyDevSup/pull/61))
+- CI jobs for Python 3.14 and 3.15 on Linux, macOS and Windows, and a job
+  pinned to EPICS Base R7.0.10 alongside the moving 7.0 branch
+
+### Changed
+
+- `ptable`: assigning a non-`None` value to a `Parameter` clears any previous
+  alarm. Assigning `None` no longer sets `alarm` to `INVALID_ALARM`, though
+  records reading a `None` value still report `INVALID_ALARM`/`UDF_ALARM` ([#52](https://github.com/epics-modules/pyDevSup/pull/52))
+- Example apps updated for Python 3 ([#59](https://github.com/epics-modules/pyDevSup/pull/59))
+- The "No such field" `AttributeError` now includes the field name ([#61](https://github.com/epics-modules/pyDevSup/pull/61))
+- CI: updated `actions/checkout` and `actions/setup-python` to v7, and the
+  ci-scripts submodule to v3.4.4
+
+### Fixed
+
+- Unit test segfaults when a test case reused a record name from an earlier
+  test case: `IOCHelper` now clears the `getRecord()` cache on teardown.
+  Running IOCs were not affected ([#61](https://github.com/epics-modules/pyDevSup/pull/61))
+- CI failures on the current `ubuntu-latest` image: Python 3.8/3.9 jobs now
+  run in containers, and EPICS Base 3.15 is built with `-std=gnu17`
+
 ## [2.1.0] - 2026-10-05
 
 ### Added

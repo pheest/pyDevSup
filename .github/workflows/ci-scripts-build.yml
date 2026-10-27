@@ -22,6 +22,7 @@ jobs:
       PROF: ${{ matrix.profile }}
       EXTRA: ${{ matrix.extra }}
       TEST: ${{ matrix.test }}
+      USR_CFLAGS: ${{ matrix.cflags }}
       VV: "1"
 
     strategy:
@@ -42,6 +43,7 @@ jobs:
             configuration: default
             base: "7.0"
             python: "3.9"
+            container: "python:3.9"
             profile: deb11
             test: yes
 
@@ -84,6 +86,7 @@ jobs:
             configuration: default
             base: "7.0"
             python: "3.8"
+            container: "python:3.8"
             profile: latest
             test: yes
 
@@ -92,6 +95,7 @@ jobs:
             configuration: default
             base: "7.0"
             python: "3.9"
+            container: "python:3.9"
             profile: latest
             test: yes
 
@@ -127,11 +131,52 @@ jobs:
             profile: latest
             test: yes
 
+          - os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            python: "3.14"
+            profile: latest
+            test: yes
+
+          - os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            python: "3.15"
+            profile: latest
+            test: yes
+
+          # Pinned release, alongside the moving 7.0 branch above
+          - os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "R7.0.10"
+            python: "3.14"
+            profile: latest
+            test: yes
+
           - os: macos-latest
             cmp: gcc
             configuration: default
             base: "7.0"
             python: "3.10"
+            profile: latest
+            test: yes
+
+          - os: macos-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            python: "3.14"
+            profile: latest
+            test: yes
+
+          - os: macos-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            python: "3.15"
             profile: latest
             test: yes
 
@@ -150,6 +195,8 @@ jobs:
             base: "3.15"
             python: "3.13"
             profile: deb13
+            # Base 3.15's bundled flex is K&R C, which newer GCCs (C23 default) reject
+            cflags: "-std=gnu17"
             test: yes
 
           - os: ubuntu-latest
@@ -193,13 +240,29 @@ jobs:
             profile: latest
             test: yes
 
+          - os: windows-latest
+            cmp: vs2026
+            configuration: default
+            base: "7.0"
+            python: "3.14"
+            profile: latest
+            test: yes
+
+          - os: windows-latest
+            cmp: vs2026
+            configuration: default
+            base: "7.0"
+            python: "3.15"
+            profile: latest
+            test: yes
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
       with:
         submodules: true
     - name: Set up Python ${{ matrix.python }}
       if: ${{ !matrix.container }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python }}
     - name: More Setup Python
