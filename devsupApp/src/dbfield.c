@@ -249,7 +249,7 @@ static PyObject* pyField_putval(pyField *self, PyObject* args)
 {
     PyObject *val;
     void *rawfield;
-    rset *prset;
+    rset *prset = NULL;
 
     if(!PyArg_ParseTuple(args, "O", &val))
         return NULL;
@@ -327,10 +327,13 @@ static PyObject* pyField_putval(pyField *self, PyObject* args)
         } else {
           dest[0] = '\0';
         }
-        if (self->addr.special == SPC_MOD)
+        if (self->addr.special == SPC_MOD) {
             /* This is needed for long string support. */
-            if (prset = dbGetRset(&self->addr))
+            prset = dbGetRset(&self->addr);
+            if (prset) {
                 prset->special(&self->addr, 1);
+            }
+        }
 #if PY_MAJOR_VERSION >= 3
         Py_DECREF(data);
 #endif
