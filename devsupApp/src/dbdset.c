@@ -218,6 +218,7 @@ static long add_record(dbCommon *prec)
             ret = dbFindField(&ent, "OUT");
 
         if(ret) {
+            fprintf(stderr, "%s: Unable to find INP/OUT\n", prec->name);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             return 0;
         }
@@ -225,6 +226,8 @@ static long add_record(dbCommon *prec)
         if(ent.pflddes->field_type!=DBF_INLINK
                 && ent.pflddes->field_type!=DBF_OUTLINK)
         {
+            fprintf(stderr, "%s: INP/OUT has unacceptible type %d\n",
+                    prec->name, ent.pflddes->field_type);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             return 0;
         }
@@ -235,6 +238,7 @@ static long add_record(dbCommon *prec)
         scanIoInit(&priv->scan);
 
         if(priv->plink->type != INST_IO) {
+            fprintf(stderr, "%s: Has invalid link type %d\n", prec->name, priv->plink->type);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             free(priv);
             return 0;
@@ -254,6 +258,7 @@ static long add_record(dbCommon *prec)
     {
         char *msg=priv->plink->value.instio.string;
         if(!msg || *msg=='\0') {
+            fprintf(stderr, "%s: Empty link string\n", prec->name);
             recGblSetSevr(prec, BAD_SUB_ALARM, INVALID_ALARM);
             return 0;
         }
@@ -262,6 +267,7 @@ static long add_record(dbCommon *prec)
     pystate = PyGILState_Ensure();
 
     if(parse_link(prec, priv->plink->value.instio.string)) {
+        fprintf(stderr, "%s: Exception in add_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
         ret = S_db_errArg;
@@ -286,6 +292,7 @@ static long del_record(dbCommon *prec)
     pystate = PyGILState_Ensure();
 
     if(detach_common(prec)) {
+        fprintf(stderr, "%s: Exception in del_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
     }
@@ -330,6 +337,7 @@ static long process_record(dbCommon *prec)
     pystate = PyGILState_Ensure();
 
     if(process_common(prec)) {
+        fprintf(stderr, "%s: Exception in process_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
         (void)recGblSetSevr(prec, READ_ALARM, INVALID_ALARM);
@@ -407,6 +415,7 @@ static long python_asub(aSubRecord* prec)
         assert(ret==0); /* really shouldn't fail */
 
         if(dbFindInfo(&entry, "pySupportLink")) {
+            fprintf(stderr, "%s: failed to initialize\n", prec->name);        
             dbFinishEntry(&entry);
             (void)recGblSetSevr(prec, INVALID_ALARM, READ_ALARM);
             return 0;
@@ -420,6 +429,7 @@ static long python_asub(aSubRecord* prec)
 
         prec->dpvt = priv;
         if(parse_link((dbCommon*)prec, inpstr)) {
+            fprintf(stderr, "%s: failed to parse pySupportLink: %s\n", prec->name, inpstr);
             PyErr_Print();
             PyErr_Clear();
             dbFinishEntry(&entry);
@@ -434,6 +444,7 @@ static long python_asub(aSubRecord* prec)
         pystate = PyGILState_Ensure();
 
     if(priv->support && process_common((dbCommon*)prec)) {
+        fprintf(stderr, "%s: Exception in process_record\n", prec->name);
         PyErr_Print();
         PyErr_Clear();
         (void)recGblSetSevr(prec, INVALID_ALARM, READ_ALARM);
