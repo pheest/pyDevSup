@@ -161,6 +161,7 @@ jobs:
             configuration: default
             base: "7.0"
             python: "3.10"
+            container: "python:3.10"
             profile: latest
             test: yes
 
