@@ -1,6 +1,7 @@
 TOP=../..
 
 include $(TOP)/configure/CONFIG
+PYMODULE = YES
 include $(TOP)/configure/CONFIG_PY
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE

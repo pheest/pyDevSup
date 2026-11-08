@@ -34,7 +34,16 @@ endif
 
 PY_INSTALL_DIR = $(INSTALL_LOCATION)/python$(PY_LD_VER)/$(T_A)
 
-ifneq ($(PYMODULE),NO)
+ifeq ($(PYMODULE),NO)
+
+ifeq ($(OS_CLASS),WIN32)
+SHRLIB_SUFFIX = .dll
+INSTALL_SHRLIB = $(INSTALL_BIN)
+else
+INSTALL_SHRLIB = $(INSTALL_LIB)
+endif
+
+else # ($(PYMODULE),NO)
 
 # Python loadables have no prefix (eg 'pymod.so')
 # and are installed alongsize .py files
@@ -49,9 +58,9 @@ LOADABLE_SHRLIB_SUFFIX = .so
 endif
 
 ifeq ($(OS_CLASS),WIN32)
-SHRLIB_SUFFIX_BASE = .pyd
+SHRLIB_SUFFIX = .pyd
 endif
 
-endif
+endif # ($(PYMODULE),NO)
 
-endif
+endif # ifneq ($(T_A),)
