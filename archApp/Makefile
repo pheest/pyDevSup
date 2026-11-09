@@ -1,6 +1,6 @@
 TOP=..
 include $(TOP)/configure/CONFIG
-include $(TOP)/cfg/CONFIG_PY
+include $(TOP)/configure/CONFIG_PY
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
@@ -9,6 +9,6 @@ DB += applmetrics.db
 DB += bplstorage.db
 
 include $(TOP)/configure/RULES
-include $(TOP)/cfg/RULES_PY
+include $(TOP)/configure/RULES_PY
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE

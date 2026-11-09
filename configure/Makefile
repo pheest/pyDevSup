@@ -7,8 +7,13 @@ PYTHON ?= python$(PY_VER)
 TARGETS = $(CONFIG_TARGETS)
 
 ifdef T_A
-CONFIGS = os/CONFIG_PY.Common.$(T_A)
+CONFIGS = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
+ifndef BASE_3_14
+ifndef BASE_3_15
 CFG = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
+endif
+endif
+
 endif
 
 CONFIGS += $(subst ../,,$(wildcard $(CONFIG_INSTALLS)))
