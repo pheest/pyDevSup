@@ -7,11 +7,12 @@ PYTHON ?= python$(PY_VER)
 TARGETS = $(CONFIG_TARGETS)
 
 ifdef T_A
-CONFIGS = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
-ifndef BASE_3_14
-ifndef BASE_3_15
+CONFIGS = os/CONFIG_PY.Common.$(T_A)
+ifdef BASE_7_0
+# Base 3.14 and 3.15 cannot use the cfg folder.
 CFG = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
-endif
+else
+CONFIGS += CONFIG_PY RULES_PY
 endif
 
 endif
