@@ -2,7 +2,7 @@ TOP=..
 
 include $(TOP)/configure/CONFIG
 PYMODULE = NO
-include $(TOP)/configure/CONFIG_PY
+include $(TOP)/cfg/CONFIG_PY
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
@@ -75,6 +75,6 @@ softIocPy$(PY_VER)_LIBS += $(EPICS_BASE_IOC_LIBS)
 #===========================
 
 include $(TOP)/configure/RULES
-include $(TOP)/configure/RULES_PY
+include $(TOP)/cfg/RULES_PY
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
