@@ -34,17 +34,7 @@ endif
 
 PY_INSTALL_DIR = $(INSTALL_LOCATION)/python$(PY_LD_VER)/$(T_A)
 
-ifeq ($(PYMODULE),NO)
-
-ifeq ($(OS_CLASS),WIN32)
-# Reset these variables to BASE defaults after ($(PYMODULE),NO).
-SHRLIB_SUFFIX = $(SHRLIB_SUFFIX_BASE)
-INSTALL_SHRLIB = $(INSTALL_BIN)
-else
-INSTALL_SHRLIB = $(INSTALL_LIB)
-endif
-
-else # ($(PYMODULE),NO)
+ifneq ($(PYMODULE),NO)
 
 # Python loadables have no prefix (eg 'pymod.so')
 # and are installed alongsize .py files
