@@ -40,8 +40,6 @@ ifneq ($(PYMODULE),NO)
 # and are installed alongsize .py files
 LOADABLE_SHRLIB_PREFIX =
 
-INSTALL_SHRLIB = $(PY_INSTALL_DIR)
-
 ifeq ($(OS_CLASS),Darwin)
 # need -undefined dynamic_lookup
 LOADABLE_SHRLIB_LDFLAGS = -bundle -flat_namespace -undefined dynamic_lookup
