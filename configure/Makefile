@@ -7,11 +7,10 @@ PYTHON ?= python$(PY_VER)
 TARGETS = $(CONFIG_TARGETS)
 
 ifdef T_A
-CONFIGS = os/CONFIG_PY.Common.$(T_A)
 ifdef BASE_7_0
 # We want the CONFIG_PY.Common.$(T_A) file to be created only in the 'cfg' and not in the 'configure' folder
-$(MKDIR) $(TOP)/cfg/os
-CFG = CONFIG_PY RULES_PY $(TOP)/cfg/os/CONFIG_PY.Common.$(T_A)
+CONFIGS = $(TOP)/cfg/os/CONFIG_PY.Common.$(T_A)
+CFG = CONFIG_PY RULES_PY
 $(TOP)/cfg/os/CONFIG_PY.Common.$(T_A): $(TOP)/makehelper.py
 	$(PYTHON) $< $@
 else
@@ -24,10 +23,6 @@ endif
 endif
 
 CONFIGS += $(subst ../,,$(wildcard $(CONFIG_INSTALLS)))
-ifdef BASE_7_0
-CONFIGS := $(filter-out os/CONFIG_PY.Common.$(T_A),$(CONFIGS))
-CONFIGS += $(TOP)/cfg/os/CONFIG_PY.Common.$(T_A)
-endif
 
 include $(TOP)/configure/RULES
 
