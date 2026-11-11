@@ -9,20 +9,26 @@ TARGETS = $(CONFIG_TARGETS)
 ifdef T_A
 CONFIGS = os/CONFIG_PY.Common.$(T_A)
 ifdef BASE_7_0
-# Base 3.14 and 3.15 cannot use the cfg folder.
-CFG = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
+# We want the CONFIG_PY.Common.$(T_A) file to be created only in the 'cfg' and not in the 'configure' folder
+CFG = CONFIG_PY RULES_PY $(TOP)/cfg/os/CONFIG_PY.Common.$(T_A)
+$(TOP)/cfg/os/CONFIG_PY.Common.$(T_A): $(TOP)/makehelper.py
+	$(PYTHON) $< $@
 else
-CONFIGS += CONFIG_PY RULES_PY
+# Base 3.14 and 3.15 cannot use the cfg folder.
+CONFIGS = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
+os/CONFIG_PY.Common.$(T_A): $(TOP)/makehelper.py
+	$(PYTHON) $< $@
 endif
 
 endif
 
 CONFIGS += $(subst ../,,$(wildcard $(CONFIG_INSTALLS)))
+ifdef BASE_7_0
+CONFIGS := $(filter-out os/CONFIG_PY.Common.$(T_A),$(CONFIGS))
+CONFIGS += $(TOP)/cfg/os/CONFIG_PY.Common.$(T_A)
+endif
 
 include $(TOP)/configure/RULES
-
-os/CONFIG_PY.Common.$(T_A): $(TOP)/makehelper.py
-	$(PYTHON) $< $@
 
 ifdef BASE_3_15
 realclean: py_clean
