@@ -7,22 +7,15 @@ PYTHON ?= python$(PY_VER)
 TARGETS = $(CONFIG_TARGETS)
 
 ifdef T_A
-ifdef BASE_7_0
-# These files will be moved to $(INSTALL_LOCATION)/cfg.
 CFG = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
-else
-# Base 3.14 and 3.15 cannot use the cfg folder.
-CONFIGS = CONFIG_PY RULES_PY os/CONFIG_PY.Common.$(T_A)
 endif
+
+CONFIGS = $(subst ../,,$(wildcard $(CONFIG_INSTALLS)))
+
+include $(TOP)/configure/RULES
 
 os/CONFIG_PY.Common.$(T_A): $(TOP)/makehelper.py
 	$(PYTHON) $< $@
-
-endif
-
-CONFIGS += $(subst ../,,$(wildcard $(CONFIG_INSTALLS)))
-
-include $(TOP)/configure/RULES
 
 ifdef BASE_3_15
 realclean: py_clean
