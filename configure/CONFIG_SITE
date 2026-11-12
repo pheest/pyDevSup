@@ -42,5 +42,17 @@ PY_VER ?= 3.9
 
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
+ifndef BASE_7_0
+# Ealier versions do not automatically include this
+include $(TOP)/configure/CONFIG_PY
+else
+# If INSTALL_LOCATION is overridden, the file cannot be automatically included.
+ifneq ($(INSTALL_LOCATION), $(TOP))
+ifneq (,$(wildcard $(INSTALL_LOCATION)/cfg/os/CONFIG_PY.Common.$(T_A)))
+include $(INSTALL_LOCATION)/cfg/CONFIG_PY
+endif
+endif
+endif
+
 -include $(TOP)/configure/CONFIG_SITE.local
 -include $(TOP)/../CONFIG_SITE.local

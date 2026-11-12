@@ -31,7 +31,6 @@ endif
 
 #LIB_SYS_LIBS += python$(PY_LD_VER)
 #PROD_SYS_LIBS += python$(PY_LD_VER)
-
 PY_INSTALL_DIR = $(INSTALL_LOCATION)/python$(PY_LD_VER)/$(T_A)
 
 ifneq ($(PYMODULE),NO)
