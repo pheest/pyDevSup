@@ -44,9 +44,8 @@ USR_CPPFLAGS += -DUSE_TYPED_RSET
 
 # If INSTALL_LOCATION is overridden, the file cannot be automatically included.
 ifneq ($(INSTALL_LOCATION), $(TOP))
-ifneq (,$(wildcard $(INSTALL_LOCATION)/cfg/os/CONFIG_PY.Common.$(T_A)))
-include $(INSTALL_LOCATION)/cfg/CONFIG_PY
-endif
+$(warning needing to include CONFIG_PY)
+-include $(INSTALL_LOCATION)/cfg/CONFIG_PY
 endif
 
 -include $(TOP)/configure/CONFIG_SITE.local
