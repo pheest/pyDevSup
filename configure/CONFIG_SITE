@@ -42,11 +42,5 @@ PY_VER ?= 3.9
 
 USR_CPPFLAGS += -DUSE_TYPED_RSET
 
-# If INSTALL_LOCATION is overridden, the file cannot be automatically included.
-ifneq ($(INSTALL_LOCATION), $(TOP))
-$(warning needing to include CONFIG_PY)
--include $(INSTALL_LOCATION)/cfg/CONFIG_PY
-endif
-
 -include $(TOP)/configure/CONFIG_SITE.local
 -include $(TOP)/../CONFIG_SITE.local
