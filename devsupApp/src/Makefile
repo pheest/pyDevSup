@@ -1,12 +1,10 @@
 TOP=../..
 
-PYMODULE = YES
 include $(TOP)/configure/CONFIG
+include $(TOP)/configure/CONFIG_PY_MODULE
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
-
-INSTALL_SHRLIB = $(PY_INSTALL_DIR)/devsup
 
 LOADABLE_LIBRARY_HOST += _dbapi
 

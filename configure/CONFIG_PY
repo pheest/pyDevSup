@@ -3,8 +3,6 @@ ifeq (,$(wildcard $(INSTALL_LOCATION)/cfg/os/CONFIG_PY.Common.$(T_A)))
 $(warning cfg/os/CONFIG_PY.Common.$(T_A) is not found)
 else
 
-PYMODULE ?= YES
-
 ifeq ($(PYTHON),)
 # Older EPICS base does not do this automatically.
 -include $(TOP)/configure/CONFIG_SITE.local
@@ -41,24 +39,6 @@ endif
 #LIB_SYS_LIBS += python$(PY_LD_VER)
 #PROD_SYS_LIBS += python$(PY_LD_VER)
 PY_INSTALL_DIR = $(INSTALL_LOCATION)/python$(PY_LD_VER)/$(T_A)
-
-ifneq ($(PYMODULE),NO)
-
-# Python loadables have no prefix (eg 'pymod.so')
-# and are installed alongsize .py files
-LOADABLE_SHRLIB_PREFIX =
-
-ifeq ($(OS_CLASS),Darwin)
-# need -undefined dynamic_lookup
-LOADABLE_SHRLIB_LDFLAGS = -bundle -flat_namespace -undefined dynamic_lookup
-LOADABLE_SHRLIB_SUFFIX = .so
-endif
-
-ifeq ($(OS_CLASS),WIN32)
-SHRLIB_SUFFIX = .pyd
-endif
-
-endif # ($(PYMODULE),NO)
 
 endif # CONFIG_PY.Common.$(T_A)
 endif # ifneq ($(T_A),)
