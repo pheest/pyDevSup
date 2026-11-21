@@ -1,4 +1,5 @@
 ifneq ($(T_A),)
+ifneq ($(dir $($(lastword $(MAKEFILE_LIST)))), $(TOP)/configure)
 ifeq ($(PYTHON),)
 # Older EPICS base does not do this automatically.
 -include $(TOP)/configure/CONFIG_SITE.local
@@ -35,4 +36,5 @@ endif
 #PROD_SYS_LIBS += python$(PY_LD_VER)
 PY_INSTALL_DIR = $(INSTALL_LOCATION)/python$(PY_LD_VER)/$(T_A)
 
+endif # ifneq ($(TOP)/configure)
 endif # ifneq ($(T_A),)
