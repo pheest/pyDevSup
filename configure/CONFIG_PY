@@ -10,6 +10,7 @@ $(error Must set PYTHON to select a python version)
 endif
 
 -include $(dir $(lastword $(MAKEFILE_LIST)))/os/CONFIG_PY.$(EPICS_HOST_ARCH).Common
+-include $(INSTALL_LOCATION)/cfg/os/CONFIG_PY.Common.$(T_A)
 -include $(dir $(lastword $(MAKEFILE_LIST)))/os/CONFIG_PY.Common.$(T_A)
 -include $(dir $(lastword $(MAKEFILE_LIST)))/os/CONFIG_PY.$(EPICS_HOST_ARCH).$(T_A)
 
